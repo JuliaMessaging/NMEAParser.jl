@@ -1,0 +1,25 @@
+using NMEAParser
+using Documenter
+
+DocMeta.setdocmeta!(NMEAParser, :DocTestSetup, :(using NMEAParser); recursive=true)
+
+makedocs(;
+    modules=[NMEAParser],
+    authors="Nicholas Shindler <nick@shindler.tech>",
+    repo="https://github.com/NickMcSweeney/NMEAParser.jl/blob/{commit}{path}#{line}",
+    sitename="NMEAParser.jl",
+    format=Documenter.HTML(;
+        prettyurls=get(ENV, "CI", "false") == "true",
+        canonical="https://NickMcSweeney.github.io/NMEAParser.jl",
+        edit_link="main",
+        assets=String[],
+    ),
+    pages=[
+        "Home" => "index.md",
+    ],
+)
+
+deploydocs(;
+    repo="github.com/NickMcSweeney/NMEAParser.jl",
+    devbranch="main",
+)
