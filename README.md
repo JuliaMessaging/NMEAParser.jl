@@ -62,8 +62,12 @@ GGA("GPS", 49660.0, 55.67208, 12.521653333333333, "GPS (SPS)", 9, 0.9, 20.2, 41.
 * `parse_msg!`: Parses an NMEA line/sentence and stores data in an NMEAData object; returns the message type.
 * `parse`: extends Base.parse and parses nmea strings to nmea type structs.
 
-## Contributing
+## Sponsorship
+![sponsor logo](https://www.volkerwessels.com/dynamics/modules/SFIL0200/view.php?fil_Id=366300&thumb_nr=26)
+
 This package is developed and sponsored by [MapXact](https://mapxact.com/) and its development is driven by its use in production systems at MapXact. However, as an open-source project, we welcome all contributions, feedback, and feature requests.
+
+## Contributing
 
 If you would like to contribute to the project, please submit a PR.
 
