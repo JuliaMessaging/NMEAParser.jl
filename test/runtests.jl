@@ -6,27 +6,27 @@ using Test, NMEAParser
         while !eof(f)
             line = readline(f)
             mtype = NMEAParser.parse_msg!(nmeas, line)
-            if (mtype == "GGA")
+            if (mtype == GGA)
                 @test nmeas.last_GGA.valid
-            elseif (mtype == "RMC")
+            elseif (mtype == RMC)
                 @test nmeas.last_RMC.valid
-            elseif (mtype == "GSA")
+            elseif (mtype == GSA)
                 @test nmeas.last_GSA.valid
-            elseif (mtype == "GSV")
+            elseif (mtype == GSV)
                 @test nmeas.last_GSV.valid
-            elseif (mtype == "GBS")
+            elseif (mtype == GBS)
                 @test nmeas.last_GBS.valid
-            elseif (mtype == "VTG")
+            elseif (mtype == VTG)
                 @test nmeas.last_VTG.valid
-            elseif (mtype == "GLL")
+            elseif (mtype == GLL)
                 @test nmeas.last_GLL.valid
-            elseif (mtype == "ZDA")
+            elseif (mtype == ZDA)
                 @test nmeas.last_ZDA.valid
-            elseif (mtype == "DTM")
+            elseif (mtype == DTM)
                 @test nmeas.last_DTM.valid
-            elseif (mtype == "PASHR")
+            elseif (mtype == PASHR)
                 @test nmeas.last_PASHR.valid   
-            elseif (mtype == "TWPOS")
+            elseif (mtype == TWPOS)
                 @test nmeas.last_TWPOS.valid 
             else
                 continue

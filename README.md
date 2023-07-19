@@ -24,17 +24,22 @@ To install NMEAParser.jl, use the Julia package manager:
 
 ```julia
 using Pkg
-Pkg.add("NMEA")
+Pkg.add("NMEAParser")
 ```
 
 ### Usage
 Here’s a simple example that demonstrates how to parse an NMEA sentence:
 
 ```julia
-using NMEA
+using NMEAParser
 
-example = NMEA.parse(raw"$GPGGA,134740.000,5540.3248,N,01231.2992,E,1,09,0.9,20.2,M,41.5,M,,0000*61")
+example = parse(raw"$GPGGA,134740.000,5540.3248,N,01231.2992,E,1,09,0.9,20.2,M,41.5,M,,0000*61")
 println(example.latitude)
+```
+
+```
+GGA("GPS", 49660.0, 55.67208, 12.521653333333333, "GPS (SPS)", 9, 0.9, 20.2, 41.5, 0.0, 0, true)
+55.67208
 ```
 
 ## Documentation
@@ -55,11 +60,14 @@ println(example.latitude)
 
 ### Methods
 * `parse_msg!`: Parses an NMEA line/sentence and stores data in an NMEAData object; returns the message type.
+* `parse`: extends Base.parse and parses nmea strings to nmea type structs.
 
 ## Contributing
 This package is developed and sponsored by [MapXact](https://mapxact.com/) and its development is driven by its use in production systems at MapXact. However, as an open-source project, we welcome all contributions, feedback, and feature requests.
 
 If you would like to contribute to the project, please submit a PR.
+
+This work is based on the [NMEA.jl](https://github.com/RobBlackwell/NMEA.jl) package, and a lot of credit is due to [RobBlackwell](https://github.com/RobBlackwell) for his work along with the other contributors to that repository.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
