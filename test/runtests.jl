@@ -1,6 +1,6 @@
 using Test, NMEAParser
 
-@testset "Test Data File" begin
+@testset "Test with Data File: `parse_msg!` and `update!`" begin
     nmeas = NMEAData()
     open("testdata.txt", "r") do f
         while !eof(f)
@@ -35,6 +35,68 @@ using Test, NMEAParser
     end
 end
 
+@testset "Test with Data File: `update` & `pop!`" begin
+    nmeas = NMEAData()
+    open("testdata.txt", "r") do f
+        while !eof(f)
+            line = readline(f)
+            if !NMEAParser.is_string_supported(line)
+                @test_throws ArgumentError NMEAParser.parse(line)
+                continue
+            end
+            nmea_data = NMEAParser.parse(line)
+            nmeas = NMEAParser.update(nmeas, nmea_data)
+            mtype = typeof(nmea_data)
+            if (mtype == GGA)
+                @test !isnothing(nmeas.last_GGA)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_GGA)
+            elseif (mtype == RMC)
+                @test !isnothing(nmeas.last_RMC)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_RMC)
+            elseif (mtype == GSA)
+                @test !isnothing(nmeas.last_GSA)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_GSA)
+            elseif (mtype == GSV)
+                @test !isnothing(nmeas.last_GSV)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_GSV)
+            elseif (mtype == GBS)
+                @test !isnothing(nmeas.last_GBS)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_GBS)
+            elseif (mtype == VTG)
+                @test !isnothing(nmeas.last_VTG)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_VTG)
+            elseif (mtype == GLL)
+                @test !isnothing(nmeas.last_GLL)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_GLL)
+            elseif (mtype == ZDA)
+                @test !isnothing(nmeas.last_ZDA)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_ZDA)
+            elseif (mtype == DTM)
+                @test !isnothing(nmeas.last_DTM)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_DTM)
+            elseif (mtype == PASHR)
+                @test !isnothing(nmeas.last_PASHR)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_PASHR)
+            elseif (mtype == TWPOS)
+                @test !isnothing(nmeas.last_TWPOS)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_TWPOS)
+            else
+                continue
+            end
+        end
+    end
+end
 
 @testset verbose = true "Test SPS data" begin
     @testset "RTK GPS" begin
@@ -79,4 +141,10 @@ end
 @testset "Test (RMC) Recommended Minimum Specific GNSS Data" begin
     example = NMEAParser.parse(raw"$GPRMC,154922.720,A,5209.731,N,00600.238,E,001.9,059.8,040123,000.0,W*7A")
     @test example.sog == 1.9
+end
+
+@testset "Bad data: parse_msg!" begin
+    s = NMEAData()
+    @test_throws BoundsError NMEAParser.parse_msg!(s,"")
+    @test_throws BoundsError NMEAParser.parse_msg!(s,"GPGSA,A,3,01,02,03,04,05,06,07,08,09,10,11,12,1.0,1.0,1.0*30")
 end

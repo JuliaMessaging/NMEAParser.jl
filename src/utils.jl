@@ -77,6 +77,44 @@ function get_system(mtype::SubString)
 end # function get_system
 
 """
+    is_string_supported(nmea_string::AbstractString)
+
+Check if the input NMEA string type is supported.
+
+# Arguments
+- `nmea_string::AbstractString`: The NMEA string to be checked.
+
+# Returns
+- `Bool`: `true` if the NMEA string is supported, `false` otherwise.
+
+# Example
+```julia
+julia> is_string_supported("\$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47")
+true
+```
+"""
+function is_string_supported(nmea_string::AbstractString)
+    message, checksum  = contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
+    header = split(message, ',') |> first
+
+    if (occursin(r"DTM$", header) ||
+        occursin(r"GBS$", header) ||
+        occursin(r"GGA$", header) ||
+        occursin(r"GLL$", header) ||
+        occursin(r"GSA$", header) ||
+        occursin(r"GSV$", header) ||
+        occursin(r"RMC$", header) ||
+        occursin(r"VTG$", header) ||
+        occursin(r"ZDA$", header) ||
+        occursin(r"PASHR$", header) ||
+        occursin(r"TWPOS$", header))
+        return true
+    else
+        return false
+    end
+end
+
+"""
     _dms_to_dd(dms::SubString, hemi::SubString)
 
 Converts a string representing degrees, minutes and seconds (DMS) to decimal degrees.
