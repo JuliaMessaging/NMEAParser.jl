@@ -65,7 +65,7 @@ function parse(nmea_string::AbstractString)
         return TWPOS(items, system=system, valid=valid)
     end
 
-    throw(ArgumentError("NMEA string not supported"))
+    throw(ArgumentError("NMEA string ($header) not supported"))
 
 end
 
