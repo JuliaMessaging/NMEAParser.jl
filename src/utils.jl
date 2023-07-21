@@ -209,7 +209,7 @@ function pos_convert(flag::Char, value::Float64)::Float64
         # M meter
         return value
     else
-        throw(ArgumentError("Velocity unit $flag is not supported"))
+        throw(ArgumentError("Position unit $flag is not supported"))
     end
 end
 

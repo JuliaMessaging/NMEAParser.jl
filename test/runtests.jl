@@ -152,6 +152,6 @@ end
 @testset "Bad data: TWPOS" begin
     bad_pos = "\$TWPOS,154922.71,0.9,H,0.9,J,0,K,1.272792,M,0.01,M*39"
     @test_throws ArgumentError NMEAParser.parse(bad_pos)
-    bad_vel = "\$TWPOS,154922.72,1.0,K,1.0,K,0,K,1.414214,E,0.01,K*3a"
+    bad_vel = "\$TWPOS,154922.72,1.0,K,1.0,K,0,K,1.414214,K,0.01,Q*3a"
     @test_throws ArgumentError NMEAParser.parse(bad_vel)
 end
