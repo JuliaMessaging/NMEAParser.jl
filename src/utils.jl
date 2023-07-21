@@ -209,7 +209,7 @@ function pos_convert(flag::Char, value::Float64)::Float64
         # M meter
         return value
     else
-        throw("Velocity unit $flag is not supported")
+        throw(ArgumentError("Velocity unit $flag is not supported"))
     end
 end
 
@@ -246,6 +246,6 @@ function vel_convert(flag::Char, value::Float64)::Float64
         # M meters per second
         return value
     else
-        throw("Velocity unit $flag is not supported")
+        throw(ArgumentError("Velocity unit $flag is not supported"))
     end
 end
