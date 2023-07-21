@@ -17,6 +17,33 @@ get_system("\$GAGGA") # "GALILEO"
 get_system("\$GNGNS") # "COMBINED"
 get_system("\$PMTK")  # "UNKNOWN"
 ```
+TODO: update `get_system` to cover all common system types
+\$AI = Alarm Indicator, (AIS?)
+\$AP = Auto Pilot (pypilot?)
+\$BD = BeiDou (China)
+\$CD = Digital Selective Calling (DSC)
+\$EC = Electronic Chart Display & Information System (ECDIS)
+\$GA = Galileo Positioning System
+\$GB = BeiDou (China)
+\$GI = NavIC, IRNSS (India)
+\$GL = GLONASS, according to IEIC 61162-1
+\$GN = Combination of multiple satellite systems (NMEA 1083)
+\$GP = Global Positioning System receiver
+\$GQ = QZSS regional GPS augmentation system (Japan)
+\$HC = Heading/Compass
+\$HE = Gyro, north seeking
+\$II = Integrated Instrumentation
+\$IN = Integrated Navigation
+\$LC = Loran-C receiver (obsolete)
+\$Pxxx = Proprietary (Vendor specific)
+\$PQ = QZSS (Quectel Quirk)
+\$QZ = QZSS regional GPS augmentation system (Japan)
+\$SD = Depth Sounder
+\$ST = Skytraq
+\$TI = Turn Indicator
+\$YX = Transducer
+\$WI = Weather Instrument
+
 """
 function get_system(mtype::SubString)
     system = ""
@@ -32,6 +59,10 @@ function get_system(mtype::SubString)
     # GALILEO
     elseif (occursin(r"^\$GA", mtype))
         system = "GALILEO"
+
+    # BeiDou
+    elseif (occursin(r"^\$GB", mtype) || occursin(r"^\$BD", mtype))
+        system = "BEIDOU"
 
     # Combined
     elseif (occursin(r"^\$GN", mtype))

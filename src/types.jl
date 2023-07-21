@@ -142,7 +142,7 @@ struct GSA <: NMEAString
     function GSA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
         sat_ids = Vector{Int}()
         for i = 4:length(items) - 3
-            if (items[i] == "")
+            if (items[i] |> strip |> isempty)
                 break
             end
             push!(sat_ids, tryparse(Int, items[i]))
