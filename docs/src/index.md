@@ -4,7 +4,7 @@ CurrentModule = NMEAParser
 
 # NMEAParser
 
-Documentation for [NMEAParser](https://github.com/NickMcSweeney/NMEAParser.jl).
+Documentation for [NMEAParser](https://github.com/JuliaMessaging/NMEAParser.jl).
 
 ```@index
 ```

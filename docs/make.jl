@@ -8,11 +8,11 @@ DocMeta.setdocmeta!(NMEAParser, :DocTestSetup, :(using NMEAParser); recursive=tr
 makedocs(;
     modules=[NMEAParser],
     authors="Nicholas Shindler <nick@shindler.tech>",
-    repo="https://github.com/NickMcSweeney/NMEAParser.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/JuliaMessaging/NMEAParser.jl/blob/{commit}{path}#{line}",
     sitename="NMEAParser.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://NickMcSweeney.github.io/NMEAParser.jl",
+        canonical="https://JuliaMessaging.github.io/NMEAParser.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -22,6 +22,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/NickMcSweeney/NMEAParser.jl",
+    repo="github.com/JuliaMessaging/NMEAParser.jl",
     devbranch="main",
 )
