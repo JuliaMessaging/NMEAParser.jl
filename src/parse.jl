@@ -130,22 +130,22 @@ update!(s::NMEAData, msg::PASHR) = s.last_PASHR = msg
 update!(s::NMEAData, msg::TWPOS) = s.last_TWPOS = msg
 
 """
-    update(s::NMEAData, msg::T) where T <: NMEAString
+    update(msg::T, s::NMEAData) where T <: NMEAString
 
 Update the last received message of type T in the NMEAData object s with the given message msg.
 Return the updated NMEAData object s.
 """
-update(s::NMEAData, msg::GGA) = (s.last_GGA = msg; s)
-update(s::NMEAData, msg::RMC) = (s.last_RMC = msg; s)
-update(s::NMEAData, msg::GSA) = (s.last_GSA = msg; s)
-update(s::NMEAData, msg::GSV) = (s.last_GSV = msg; s)
-update(s::NMEAData, msg::GBS) = (s.last_GBS = msg; s)
-update(s::NMEAData, msg::VTG) = (s.last_VTG = msg; s)
-update(s::NMEAData, msg::GLL) = (s.last_GLL = msg; s)
-update(s::NMEAData, msg::ZDA) = (s.last_ZDA = msg; s)
-update(s::NMEAData, msg::DTM) = (s.last_DTM = msg; s)
-update(s::NMEAData, msg::PASHR) = (s.last_PASHR = msg; s)
-update(s::NMEAData, msg::TWPOS) = (s.last_TWPOS = msg; s)
+update(msg::GGA, s::NMEAData) = (s.last_GGA = msg; s)
+update(msg::RMC, s::NMEAData) = (s.last_RMC = msg; s)
+update(msg::GSA, s::NMEAData) = (s.last_GSA = msg; s)
+update(msg::GSV, s::NMEAData) = (s.last_GSV = msg; s)
+update(msg::GBS, s::NMEAData) = (s.last_GBS = msg; s)
+update(msg::VTG, s::NMEAData) = (s.last_VTG = msg; s)
+update(msg::GLL, s::NMEAData) = (s.last_GLL = msg; s)
+update(msg::ZDA, s::NMEAData) = (s.last_ZDA = msg; s)
+update(msg::DTM, s::NMEAData) = (s.last_DTM = msg; s)
+update(msg::PASHR, s::NMEAData) = (s.last_PASHR = msg; s)
+update(msg::TWPOS, s::NMEAData) = (s.last_TWPOS = msg; s)
 
 """
     pop!(nmea_data::NMEAData, ::Type{T}) where T <: NMEAString
