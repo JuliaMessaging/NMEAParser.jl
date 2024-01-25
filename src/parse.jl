@@ -6,6 +6,7 @@ transmission from marine and navigation devices.
 
 # Arguments
 - `nmea_string::AbstractString`: The NMEA string to be parsed.
+- `validate_checksum` (optional): Default=true. Setting to false skips validating the checksum.  
 
 # Returns
 A struct that represents the type and content of the NMEA string, such as DTM,
@@ -22,18 +23,21 @@ header and the items. It determines the system name from the header and calls th
 appropriate constructor for the corresponding struct type. If no matching struct type
 is found, it throws an `ArgumentError`.
 """
-function parse(nmea_string::AbstractString)
+function parse(nmea_string::AbstractString; validate_checksum=true)
     message, checksum  = contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
 
-    checksum = Base.parse(Int64, "0x$checksum") |> Char
-    hash = Char(xor(Vector{UInt8}(split(message, "\$")[2])...))
+    valid = true
+    if validate_checksum
+        checksum = Base.parse(Int64, "0x$checksum") |> Char
+        hash = Char(xor(Vector{UInt8}(split(message, "\$")[2])...))
 
-    valid = checksum === hash
-    if !valid
-        @warn "Message checksum mismatch"
-        # println("MESSAGE: ", message)
-        # println("CHECKSUM: ", checksum, " | ", Char(checksum))
-        # println("HASH: ", hash)
+        valid = checksum === hash
+        if !valid
+            @warn "Message checksum mismatch"
+            # println("MESSAGE: ", message)
+            # println("CHECKSUM: ", checksum, " | ", Char(checksum))
+            # println("HASH: ", hash)
+        end
     end
 
     items = split(message, ',')
@@ -63,6 +67,8 @@ function parse(nmea_string::AbstractString)
         return PASHR(items, system=system, valid=valid)
     elseif (occursin(r"TWPOS$", header))
         return TWPOS(items, system=system, valid=valid)
+    elseif (occursin(r"TWHPR$", header))
+        return TWHPR(items, system=system, valid=valid)
     end
 
     throw(ArgumentError("NMEA string ($header) not supported"))
@@ -86,6 +92,7 @@ A mutable struct that stores the last parsed NMEA messages of different types.
 - `last_DTM::Union{Nothing, DTM}`: the last DTM message parsed, or nothing if none
 - `last_PASHR::Union{Nothing, PASHR}`: the last PASHR message parsed, or nothing if none
 - `last_TWPOS::Union{Nothing, TWPOS}`: the last TWPOS message parsed, or nothing if none
+- `last_TWHPR::Union{Nothing, TWHPR}`: the last TWHPR message parsed, or nothing if none
 """
 mutable struct NMEAData
     last_GGA::Union{Nothing, GGA}
@@ -99,11 +106,12 @@ mutable struct NMEAData
     last_DTM::Union{Nothing, DTM}
     last_PASHR::Union{Nothing, PASHR}
     last_TWPOS::Union{Nothing, TWPOS}
+    last_TWHPR::Union{Nothing, TWHPR}
 
     function NMEAData()
         new(nothing, nothing, nothing,
             nothing, nothing, nothing, nothing,
-            nothing, nothing, nothing, nothing)
+            nothing, nothing, nothing, nothing, nothing)
     end # constructor NMEAData
 end # type NMEAData
 
@@ -114,7 +122,7 @@ Update the corresponding field of `s` with the given NMEA message `msg`.
 
 # Arguments
 - `s::NMEAData`: the NMEA data struct to be updated
-- `msg`: an NMEA message of type GGA, RMC, GSA, GSV, GBS, VTG, GLL, ZDA, DTM, PASHR or TWPOS
+- `msg`: an NMEA message of type GGA, RMC, GSA, GSV, GBS, VTG, GLL, ZDA, DTM, PASHR, TWPOS or TWHPR
 
 """
 update!(s::NMEAData, msg::GGA) = s.last_GGA = msg
@@ -128,6 +136,7 @@ update!(s::NMEAData, msg::ZDA) = s.last_ZDA = msg
 update!(s::NMEAData, msg::DTM) = s.last_DTM = msg
 update!(s::NMEAData, msg::PASHR) = s.last_PASHR = msg
 update!(s::NMEAData, msg::TWPOS) = s.last_TWPOS = msg
+update!(s::NMEAData, msg::TWHPR) = s.last_TWHPR = msg
 
 """
     update(msg::T, s::NMEAData) where T <: NMEAString
@@ -146,6 +155,7 @@ update(msg::ZDA, s::NMEAData) = (s.last_ZDA = msg; s)
 update(msg::DTM, s::NMEAData) = (s.last_DTM = msg; s)
 update(msg::PASHR, s::NMEAData) = (s.last_PASHR = msg; s)
 update(msg::TWPOS, s::NMEAData) = (s.last_TWPOS = msg; s)
+update(msg::TWHPR, s::NMEAData) = (s.last_TWHPR = msg; s)
 
 """
     pop!(nmea_data::NMEAData, ::Type{T}) where T <: NMEAString
@@ -207,6 +217,11 @@ end
 function pop!(nmea_data::NMEAData, ::Type{TWPOS})
     last = isnothing(nmea_data.last_TWPOS) ? throw(UndefVarError("last_TWPOS not defined")) : nmea_data.last_TWPOS
     nmea_data.last_TWPOS = nothing
+    return last
+end
+function pop!(nmea_data::NMEAData, ::Type{TWHPR})
+    last = isnothing(nmea_data.last_TWHPR) ? throw(UndefVarError("last_TWHPR not defined")) : nmea_data.last_TWHPR
+    nmea_data.last_TWHPR = nothing
     return last
 end
 

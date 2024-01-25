@@ -107,7 +107,8 @@ function is_string_supported(nmea_string::AbstractString)
         occursin(r"VTG$", header) ||
         occursin(r"ZDA$", header) ||
         occursin(r"PASHR$", header) ||
-        occursin(r"TWPOS$", header))
+        occursin(r"TWPOS$", header) ||
+        occursin(r"TWHPR$", header))
         return true
     else
         return false

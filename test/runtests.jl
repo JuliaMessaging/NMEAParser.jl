@@ -6,6 +6,7 @@ using Test, NMEAParser
         while !eof(f)
             line = readline(f)
             mtype = NMEAParser.parse_msg!(nmeas, line)
+
             if (mtype == GGA)
                 @test nmeas.last_GGA.valid
             elseif (mtype == RMC)
@@ -27,7 +28,7 @@ using Test, NMEAParser
             elseif (mtype == PASHR)
                 @test nmeas.last_PASHR.valid   
             elseif (mtype == TWPOS)
-                @test nmeas.last_TWPOS.valid 
+                @test !isnothing(nmeas.last_TWPOS) 
             else
                 continue
             end
@@ -45,7 +46,7 @@ end
                 continue
             end
             nmea_data = NMEAParser.parse(line)
-            nmeas = NMEAParser.update(nmeas, nmea_data)
+            nmeas = NMEAParser.update(nmea_data, nmeas)
             mtype = typeof(nmea_data)
             if (mtype == GGA)
                 @test !isnothing(nmeas.last_GGA)
@@ -91,6 +92,10 @@ end
                 @test !isnothing(nmeas.last_TWPOS)
                 @test nmea_data == pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_TWPOS)
+            elseif (mtype == TWHPR)
+                @test !isnothing(nmeas.last_TWHPR)
+                @test nmea_data == pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_TWHPR)
             else
                 continue
             end
@@ -127,10 +132,33 @@ end
 end
 
 @testset "Test Position data" begin
-    example = NMEAParser.parse(raw"$TWPOS,154922.69,0.7,M,0.7,M,0,M,0.989949,M,0.01,K*3d")
-    @test example.xpose === 0.7
-    example = NMEAParser.parse(raw"$TWPOS,154922.7,0.8,M,0.8,M,0,M,1.131371,M,0.01,K*e")
-    @test example.distance === 1.131371
+    example = NMEAParser.parse(raw"$PTWPOS,021539.44,00000001.770,M,00000000.870,M,0000.000,M,0007.620,M,000.011281,K,F*88", validate_checksum=false)
+    @test example.xpose === 1.77
+    example = NMEAParser.parse(raw"$PTWPOS,021539.63,00000001.772,M,00000000.870,M,0000.000,M,0007.623,M,000.045134,K,F*fe", validate_checksum=false)
+    @test example.ypose === 0.87
+    example = NMEAParser.parse(raw"$PTWPOS,021539.72,00000001.774,M,00000000.870,M,0000.000,M,0007.624,M,000.067707,K,F*17", validate_checksum=false)
+    @test example.direction === 'F'
+    example = NMEAParser.parse(raw"$PTWPOS,021539.82,00000001.775,M,00000000.870,M,0000.000,M,0007.626,M,000.045134,K,F*dd", validate_checksum=false)
+    @test example.time === 8139.82
+    example = NMEAParser.parse(raw"$PTWPOS,021539.91,00000001.776,M,00000000.870,M,0000.000,M,0007.627,M,000.045134,K,F*60", validate_checksum=false)
+    @test example.distance === 7.627
+    example = NMEAParser.parse(raw"$PTWPOS,021540.01,00000001.778,M,00000000.871,M,0000.000,M,0007.628,M,000.045134,K,F*e9", validate_checksum=false)
+    @test example.velocity === 0.1624824
+end
+
+@testset "Test Orientation (TWHPR) data" begin
+    example = NMEAParser.parse(raw"$PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2E")
+    @test example.heading ≈ 12.456 atol=1e-6
+    @test example.pitch ≈ 78.901 atol=1e-6
+    @test example.roll ≈ 2.34 atol=1e-6
+    @test example.valid === true
+
+    example_invalid = NMEAParser.parse(raw"$PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2C")
+    @test example_invalid.valid === false
+
+    example_default = NMEAParser.parse(raw"$PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2C", validate_checksum=false)
+    @test example_default.system === "UNKNOWN"
+    @test example_default.valid === true
 end
 
 @testset "Test (GSA) GNSS DOP and Active Satellites" begin
@@ -150,8 +178,8 @@ end
 end
 
 @testset "Bad data: TWPOS" begin
-    bad_pos = "\$TWPOS,154922.71,0.9,H,0.9,J,0,K,1.272792,M,0.01,M*39"
-    @test_throws ArgumentError NMEAParser.parse(bad_pos)
-    bad_vel = "\$TWPOS,154922.72,1.0,K,1.0,K,0,K,1.414214,K,0.01,Q*3a"
-    @test_throws ArgumentError NMEAParser.parse(bad_vel)
+    bad_pos = "\$TWPOS,154922.71,0.9,H,0.9,J,0,K,1.272792,M,0.01,M,F*39"
+    @test_throws ArgumentError NMEAParser.parse(bad_pos, validate_checksum=false)
+    bad_vel = "\$TWPOS,154922.72,1.0,K,1.0,K,0,K,1.414214,K,0.01,Q,F*3a"
+    @test_throws ArgumentError NMEAParser.parse(bad_vel, validate_checksum=false)
 end

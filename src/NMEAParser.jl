@@ -2,7 +2,7 @@ module NMEAParser
 
 export NMEAData, parse_msg!, is_string_supported, update
 export NMEAString
-export GGA, GSA, ZDA, GBS, GLL, GSV, RMC, VTG, DTM, PASHR, TWPOS
+export GGA, GSA, ZDA, GBS, GLL, GSV, RMC, VTG, DTM, PASHR, TWPOS, TWHPR
 
 import Base.pop!
 import Base.parse
