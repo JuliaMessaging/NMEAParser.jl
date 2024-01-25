@@ -57,6 +57,7 @@ GGA("GPS", 49660.0, 55.67208, 12.521653333333333, "GPS (SPS)", 9, 0.9, 20.2, 41.
 * `DTM`: Datum.
 * `PASHR` (proprietary): Inertial altitude data - source.
 * `TWPOS` (proprietary): 2D Position data.
+* `TWHPR` (proprietary): Orientation data.
 
 ### Methods
 * `parse_msg!`: Parses an NMEA line/sentence and stores data in an NMEAData object; returns the message type.
