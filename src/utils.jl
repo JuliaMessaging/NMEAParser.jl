@@ -107,7 +107,8 @@ function is_string_supported(nmea_string::AbstractString)
         occursin(r"VTG$", header) ||
         occursin(r"ZDA$", header) ||
         occursin(r"PASHR$", header) ||
-        occursin(r"TWPOS$", header))
+        occursin(r"TWPOS$", header) ||
+        occursin(r"TWHPR$", header))
         return true
     else
         return false
@@ -198,13 +199,13 @@ value in meters.
 function pos_convert(flag::Char, value::Float64)::Float64
     if flag == 'F'
         # F feet
-        return value / 0.3048
+        return value * 0.3048
     elseif flag == 'N'
         # N miles
-        return value * 0.621371192237
+        return value * 1609.344
     elseif flag == 'K'
         # K kilometer
-        return value * 1000.
+        return value * 1000.0
     elseif flag == 'M'
         # M meter
         return value
@@ -232,16 +233,14 @@ Throws an exception if the flag is not one of the supported values.
 
 # Algorithm
 The function uses a simple formula to convert the velocity value based on the flag.
-For example, if the flag is 'N', it multiplies the value by 1.94384449244 to get the equivalent
-value in meters per second.
 """
 function vel_convert(flag::Char, value::Float64)::Float64
     if flag == 'N'
         # N knots
-        return value * 1.94384449244
+        return value / 1.94384449244
     elseif flag == 'K'
         # K kilometer per hour
-        return value * 3.6
+        return value / 3.6
     elseif flag == 'M'
         # M meters per second
         return value

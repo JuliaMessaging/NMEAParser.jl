@@ -671,6 +671,7 @@ struct TWPOS <: NMEAString
     zpose::Float64
     distance::Float64
     velocity::Float64
+    direction::Char
     valid::Bool
 
     function TWPOS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
@@ -684,6 +685,59 @@ struct TWPOS <: NMEAString
             pos_convert(only(items[8]), something(tryparse(Float64, items[7]),0.0)),
             pos_convert(only(items[10]), something(tryparse(Float64, items[9]),0.0)),
             vel_convert(only(items[12]), something(tryparse(Float64, items[11]),0.0)),
+            Char(items[13][1]),
             valid)
     end # constructor TWPOS
 end # type TWPOS
+
+
+"""
+    TWHPR <: NMEAString
+
+A Julia struct representing the TWHPR NMEA string, which contains information about a system, heading, pitch, roll, and validity status.
+
+# Fields
+- `system::String`: The system identifier.
+- `heading::Float64`: The heading value.
+- `pitch::Float64`: The pitch value.
+- `roll::Float64`: The roll value.
+- `valid::Bool`: A boolean indicating the validity of the data.
+
+# Constructor
+```julia
+TWHPR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+Constructs a `TWHPR` object from an array of string items, such as those parsed from a NMEA sentence.
+
+## Parameters
+- `items::Array{D}`: An array of string items representing the parsed NMEA sentence.
+- `system::AbstractString`: (Optional) The system identifier. Defaults to "UNKNOWN".
+- `valid::Bool`: (Optional) The validity status. Defaults to `true`.
+
+## Returns
+A `TWHPR` object with fields populated based on the provided items and optional parameters.
+
+# Example
+```julia
+data = ["PTWHPR", "161540.45", "12.456", "78.901", "2.34", "79.912", "0.12*2C"]
+twhpr = TWHPR(data, system="NAV", valid=true)
+```
+"""
+struct TWHPR <: NMEAString
+    system::String
+    time::Float64
+    heading::Float64
+    pitch::Float64
+    roll::Float64
+    valid::Bool
+
+    function TWHPR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+        # $PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2C
+        new(system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Float64, items[3]),0.0),
+            something(tryparse(Float64, items[4]),0.0),
+            something(tryparse(Float64, items[5]),0.0),
+            valid)
+    end # constructor TWHPR
+end # type TWHPR

@@ -4,7 +4,6 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaMessaging.github.io/NMEAParser.jl/dev/)
 [![Build Status](https://github.com/JuliaMessaging/NMEAParser.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaMessaging/NMEAParser.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/JuliaMessaging/NMEAParser.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaMessaging/NMEAParser.jl)
-[![Coverage](https://coveralls.io/repos/github/JuliaMessaging/NMEAParser.jl/badge.svg?branch=main)](https://coveralls.io/github/JuliaMessaging/NMEAParser.jl?branch=main)
 
 ## Introduction
 
@@ -57,6 +56,7 @@ GGA("GPS", 49660.0, 55.67208, 12.521653333333333, "GPS (SPS)", 9, 0.9, 20.2, 41.
 * `DTM`: Datum.
 * `PASHR` (proprietary): Inertial altitude data - source.
 * `TWPOS` (proprietary): 2D Position data.
+* `TWHPR` (proprietary): Orientation data.
 
 ### Methods
 * `parse_msg!`: Parses an NMEA line/sentence and stores data in an NMEAData object; returns the message type.
