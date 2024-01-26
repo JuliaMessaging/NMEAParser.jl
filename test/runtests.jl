@@ -143,7 +143,7 @@ end
     example = NMEAParser.parse(raw"$PTWPOS,021539.91,00000001.776,M,00000000.870,M,0000.000,M,0007.627,M,000.045134,K,F*60", validate_checksum=false)
     @test example.distance === 7.627
     example = NMEAParser.parse(raw"$PTWPOS,021540.01,00000001.778,M,00000000.871,M,0000.000,M,0007.628,M,000.045134,K,F*e9", validate_checksum=false)
-    @test example.velocity === 0.1624824
+    @test example.velocity ≈ 0.012537222222222222
 end
 
 @testset "Test Orientation (TWHPR) data" begin
@@ -182,4 +182,32 @@ end
     @test_throws ArgumentError NMEAParser.parse(bad_pos, validate_checksum=false)
     bad_vel = "\$TWPOS,154922.72,1.0,K,1.0,K,0,K,1.414214,K,0.01,Q,F*3a"
     @test_throws ArgumentError NMEAParser.parse(bad_vel, validate_checksum=false)
+end
+
+@testset "Pos conversion" begin
+    # Test conversion from feet to meters
+    @test NMEAParser.pos_convert('F', 10.0) ≈ 3.048
+
+    # Test conversion from miles to meteres
+    @test NMEAParser.pos_convert('N', 3.12) ≈ 5021.15328
+
+    # Test conversion from kilometers to meters
+    @test NMEAParser.pos_convert('K', 5.0) === 5000.0
+
+    # Test conversion from meters (no conversion needed)
+    @test NMEAParser.pos_convert('M', 5000.0) === 5000.0
+
+    # Test for unsupported unit
+    @test_throws ArgumentError NMEAParser.pos_convert('_', 10.0)
+end
+
+@testset "Vel conversion" begin
+    # Test conversion from knotts to mps
+    @test NMEAParser.vel_convert('N', 19.4384449244) ≈ 10.0
+    # Test conversion from kph to mps
+    @test NMEAParser.vel_convert('K', 36.0) === 10.0
+    # Test conversion from mps (no conversion needed)
+    @test NMEAParser.vel_convert('M', 10.0) === 10.0
+    # Test for unsupported unit
+    @test_throws ArgumentError NMEAParser.vel_convert('X', 10.0)
 end
