@@ -23,11 +23,18 @@ type constructor with the relevant information from the NMEA sentence.
 macro do_parse(headers, header_str, items, system, valid)
     code = Expr(:block)
     for (header_regex, T) in eval(headers)
-        push!(code.args, quote
-            if (occursin($(header_regex), $(esc(header_str))))
-                return $T($(esc(items)), system=$(esc(system)), valid=$(esc(valid)))
-            end
-       end)
+        push!(
+            code.args,
+            quote
+                if (occursin($(header_regex), $(esc(header_str))))
+                    return $T(
+                        $(esc(items)),
+                        system = $(esc(system)),
+                        valid = $(esc(valid)),
+                    )
+                end
+            end,
+        )
     end
     quote
         $(code.args...)
@@ -92,23 +99,23 @@ function get_system(mtype::SubString)
     if (occursin(r"^\$GP", mtype))
         system = "GPS"
 
-    # GLONASS
+        # GLONASS
     elseif (occursin(r"^\$GL", mtype))
         system = "GLONASS"
 
-    # GALILEO
+        # GALILEO
     elseif (occursin(r"^\$GA", mtype))
         system = "GALILEO"
 
-    # BeiDou
+        # BeiDou
     elseif (occursin(r"^\$GB", mtype) || occursin(r"^\$BD", mtype))
         system = "BEIDOU"
 
-    # Combined
+        # Combined
     elseif (occursin(r"^\$GN", mtype))
         system = "COMBINED"
 
-    # Proprietary (non-NMEA standard) message
+        # Proprietary (non-NMEA standard) message
     else
         system = "UNKNOWN"
     end
@@ -134,10 +141,12 @@ true
 ```
 """
 function is_string_supported(nmea_string::AbstractString)
-    message, checksum  = contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
+    message, checksum =
+        contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
     header = split(message, ',') |> first
 
-    if (occursin(r"DTM$", header) ||
+    if (
+        occursin(r"DTM$", header) ||
         occursin(r"GBS$", header) ||
         occursin(r"GGA$", header) ||
         occursin(r"GLL$", header) ||
@@ -151,7 +160,8 @@ function is_string_supported(nmea_string::AbstractString)
         occursin(r"TWPOS$", header) ||
         occursin(r"TWPLS$", header) ||
         occursin(r"TWWHE$", header) ||
-        occursin(r"TWHPR$", header))
+        occursin(r"TWHPR$", header)
+    )
         return true
     else
         return false
@@ -159,15 +169,18 @@ function is_string_supported(nmea_string::AbstractString)
 end
 
 function is_string_proprietary(nmea_string::AbstractString)
-    message, checksum  = contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
+    message, checksum =
+        contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
     header = split(message, ',') |> first
 
-    if (occursin(r"PASHR$", header) ||
+    if (
+        occursin(r"PASHR$", header) ||
         occursin(r"TWVCT$", header) ||
         occursin(r"TWPOS$", header) ||
         occursin(r"TWPLS$", header) ||
         occursin(r"TWWHE$", header) ||
-        occursin(r"TWHPR$", header))
+        occursin(r"TWHPR$", header)
+    )
         return true
     else
         return false
@@ -228,7 +241,7 @@ seconds = _hms_to_secs(hms)
 ```
 """
 function _hms_to_secs(hms::SubString)::Float64
-    hours   = Base.parse(Float64, hms[1:2])
+    hours = Base.parse(Float64, hms[1:2])
     minutes = Base.parse(Float64, hms[3:4])
     seconds = Base.parse(Float64, hms[5:end])
     (hours * 3600) + (minutes * 60) + seconds

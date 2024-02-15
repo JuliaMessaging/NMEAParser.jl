@@ -1,21 +1,21 @@
 const NMEA_TYPES = [
-	(r"GGA$", GGA),
-	(r"DTM$", DTM),
-	(r"GBS$", GBS),
-	(r"GLL$", GLL),
-	(r"GSA$", GSA),
-	(r"GSV$", GSV),
-	(r"RMC$", RMC),
-	(r"VTG$", VTG),
-	(r"ZDA$", ZDA),
-	(r"PASHR$", PASHR),
-	(r"PTWPOS$", PTWPOS),
-	(r"PTWVCT$", PTWVCT),
-	(r"PTWPLS$", PTWPLS),
-	(r"PTWWHE$", PTWWHE),
-	(r"PTWHPR$", PTWHPR),
-	(r"PTACC$",  PTACC),
-	(r"PTGYR$",  PTGYR),
+    (r"GGA$", GGA),
+    (r"GSA$", GSA),
+    (r"DTM$", DTM),
+    (r"GBS$", GBS),
+    (r"GLL$", GLL),
+    (r"GSV$", GSV),
+    (r"RMC$", RMC),
+    (r"VTG$", VTG),
+    (r"ZDA$", ZDA),
+    (r"PASHR$", PASHR),
+    (r"PTWPOS$", PTWPOS),
+    (r"PTWVCT$", PTWVCT),
+    (r"PTWPLS$", PTWPLS),
+    (r"PTWWHE$", PTWWHE),
+    (r"PTWHPR$", PTWHPR),
+    (r"PTACC$", PTACC),
+    (r"PTGYR$", PTGYR),
 ]
 
 
@@ -40,20 +40,22 @@ result = nmea_parse("\$GGA,123456,123.456,N,987.654,W,1,8,0.9,123.4,M,54.3,M,1,"
 ```
 
 """
-function nmea_parse(nmea_string::AbstractString; validate_checksum=true)
-	isempty(nmea_string) && throw(BoundsError("Input string is empty"))
+function nmea_parse(nmea_string::AbstractString; validate_checksum = true)
+    isempty(nmea_string) && throw(BoundsError("Input string is empty"))
 
-	message, checksum = contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
+    message, checksum =
+        contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
 
-	valid = validate_checksum ? Base.parse(UInt8, "0x$checksum") === hash_msg(message) : true
+    valid =
+        validate_checksum ? Base.parse(UInt8, "0x$checksum") === hash_msg(message) : true
 
-	items = split(message, ',')
-	header = items |> first
-	system = header |> get_system
+    items = split(message, ',')
+    header = items |> first
+    system = header |> get_system
 
-	@do_parse NMEA_TYPES header items system valid
+    @do_parse NMEA_TYPES header items system valid
 
-	throw(ArgumentError("NMEA string ($header) not supported"))
+    throw(ArgumentError("NMEA string ($header) not supported"))
 end
 
 
@@ -74,21 +76,19 @@ A mutable struct that stores the last parsed NMEA messages of different types.
 - `last_DTM::Union{Nothing, DTM}`: the last DTM message parsed, or nothing if none
 """
 mutable struct NMEAData
-	last_GGA::Union{Nothing, GGA}
-	last_RMC::Union{Nothing, RMC}
-	last_GSA::Union{Nothing, GSA}
-	last_GSV::Union{Nothing, GSV}
-	last_GBS::Union{Nothing, GBS}
-	last_VTG::Union{Nothing, VTG}
-	last_GLL::Union{Nothing, GLL}
-	last_ZDA::Union{Nothing, ZDA}
-	last_DTM::Union{Nothing, DTM}
+    last_GGA::Union{Nothing,GGA}
+    last_RMC::Union{Nothing,RMC}
+    last_GSA::Union{Nothing,GSA}
+    last_GSV::Union{Nothing,GSV}
+    last_GBS::Union{Nothing,GBS}
+    last_VTG::Union{Nothing,VTG}
+    last_GLL::Union{Nothing,GLL}
+    last_ZDA::Union{Nothing,ZDA}
+    last_DTM::Union{Nothing,DTM}
 
-	function NMEAData()
-		new(nothing, nothing, nothing,
-			nothing, nothing, nothing,
-			nothing, nothing, nothing)
-	end # constructor NMEAData
+    function NMEAData()
+        new(nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing)
+    end # constructor NMEAData
 end # type NMEAData
 
 """
@@ -135,49 +135,67 @@ If no message of type T has been received, throw an UndefVarError.
 This function extends the Base.pop! function for NMEAData objects.
 """
 function pop!(nmea_data::NMEAData, ::Type{GGA})
-	last = isnothing(nmea_data.last_GGA) ? throw(UndefVarError("last_GGA not defined")) : nmea_data.last_GGA
-	nmea_data.last_GGA = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_GGA) ? throw(UndefVarError("last_GGA not defined")) :
+        nmea_data.last_GGA
+    nmea_data.last_GGA = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{RMC})
-	last = isnothing(nmea_data.last_RMC) ? throw(UndefVarError("last_RMC not defined")) : nmea_data.last_RMC
-	nmea_data.last_RMC = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_RMC) ? throw(UndefVarError("last_RMC not defined")) :
+        nmea_data.last_RMC
+    nmea_data.last_RMC = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GSA})
-	last = isnothing(nmea_data.last_GSA) ? throw(UndefVarError("last_GSA not defined")) : nmea_data.last_GSA
-	nmea_data.last_GSA = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_GSA) ? throw(UndefVarError("last_GSA not defined")) :
+        nmea_data.last_GSA
+    nmea_data.last_GSA = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GSV})
-	last = isnothing(nmea_data.last_GSV) ? throw(UndefVarError("last_GSV not defined")) : nmea_data.last_GSV
-	nmea_data.last_GSV = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_GSV) ? throw(UndefVarError("last_GSV not defined")) :
+        nmea_data.last_GSV
+    nmea_data.last_GSV = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GBS})
-	last = isnothing(nmea_data.last_GBS) ? throw(UndefVarError("last_GBS not defined")) : nmea_data.last_GBS
-	nmea_data.last_GBS = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_GBS) ? throw(UndefVarError("last_GBS not defined")) :
+        nmea_data.last_GBS
+    nmea_data.last_GBS = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{VTG})
-	last = isnothing(nmea_data.last_VTG) ? throw(UndefVarError("last_VTG not defined")) : nmea_data.last_VTG
-	nmea_data.last_VTG = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_VTG) ? throw(UndefVarError("last_VTG not defined")) :
+        nmea_data.last_VTG
+    nmea_data.last_VTG = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GLL})
-	last = isnothing(nmea_data.last_GLL) ? throw(UndefVarError("last_GLL not defined")) : nmea_data.last_GLL
-	nmea_data.last_GLL = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_GLL) ? throw(UndefVarError("last_GLL not defined")) :
+        nmea_data.last_GLL
+    nmea_data.last_GLL = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{ZDA})
-	last = isnothing(nmea_data.last_ZDA) ? throw(UndefVarError("last_ZDA not defined")) : nmea_data.last_ZDA
-	nmea_data.last_ZDA = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_ZDA) ? throw(UndefVarError("last_ZDA not defined")) :
+        nmea_data.last_ZDA
+    nmea_data.last_ZDA = nothing
+    return last
 end
 function pop!(nmea_data::NMEAData, ::Type{DTM})
-	last = isnothing(nmea_data.last_DTM) ? throw(UndefVarError("last_DTM not defined")) : nmea_data.last_DTM
-	nmea_data.last_DTM = nothing
-	return last
+    last =
+        isnothing(nmea_data.last_DTM) ? throw(UndefVarError("last_DTM not defined")) :
+        nmea_data.last_DTM
+    nmea_data.last_DTM = nothing
+    return last
 end
 
 """
@@ -230,18 +248,18 @@ julia> d = [ "\$GPRMC,154925.820,A,5209.732,N,00600.240,E,001.9,059.8,040123,000
 ```
 """
 function parse_msg!(s::NMEAData, line::AbstractString)
-	try
-		message = nmea_parse(line)
+    try
+        message = nmea_parse(line)
 
-		update!(s, message)
+        update!(s, message)
 
-		return message |> typeof
-	catch err
-		if isa(err, ArgumentError)
-			mtype = split(line, ',')[1]
-			@warn "$mtype is not a supported NMEA string. skipping."
-			return Nothing
-		end
-		rethrow()
-	end
+        return message |> typeof
+    catch err
+        if isa(err, ArgumentError)
+            mtype = split(line, ',')[1]
+            @warn "$mtype is not a supported NMEA string. skipping."
+            return Nothing
+        end
+        rethrow()
+    end
 end # function parse_msg!
