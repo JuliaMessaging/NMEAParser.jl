@@ -5,6 +5,7 @@ using Test, NMEAParser
     open("testdata.txt", "r") do f
         while !eof(f)
             line = readline(f)
+
             mtype = NMEAParser.parse_msg!(nmeas, line)
 
             if (mtype == GGA)
@@ -149,6 +150,12 @@ end
     msg = raw"$GPRMC,154922.720,A,5209.731,N,00600.238,E,001.9,059.8,040123,000.0,W"
     checksum = 0x7a
     @test NMEAParser.hash_msg(msg) === checksum
+end
+
+@testset "supported nmea" begin
+line = raw"$GPGGA,134740.000,5540.3248,N,01231.2992,E,1,09,0.9,20.2,M,41.5,M,,0000*61"
+    @test !NMEAParser.is_string_proprietary(line)
+    @test !NMEAParser.is_string_supported(line)
 end
 
 @testset verbose = true "unit conversion" begin
