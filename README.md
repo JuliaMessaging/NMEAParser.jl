@@ -43,8 +43,7 @@ GGA("GPS", 49660.0, 55.67208, 12.521653333333333, "GPS (SPS)", 9, 0.9, 20.2, 41.
 
 ## Documentation
 
-### Types
-* `NMEAData`: Stores data for the last parsed sentence of all NMEA message types.
+### Standard Types
 * `GGA`: Global Positioning System Fix Data.
 * `GSA`: GNSS DOP and Active Satellites.
 * `ZDA`: Time and Date.
@@ -54,13 +53,25 @@ GGA("GPS", 49660.0, 55.67208, 12.521653333333333, "GPS (SPS)", 9, 0.9, 20.2, 41.
 * `RMC`: Recommended Minimum Specific GNSS Data.
 * `VTG`: Course over Ground and Ground Speed.
 * `DTM`: Datum.
-* `PASHR` (proprietary): Inertial altitude data - source.
-* `TWPOS` (proprietary): 2D Position data.
-* `TWHPR` (proprietary): Orientation data.
+
+#### Store obj for standard types
+* `NMEAData`: Stores data for the last parsed sentence of all NMEA message types.
+
+### Proprietary Types
+* `PASHR`: Inertial altitude data - source.
+* `PTWPOS`: 2D Position data.
+* `PTWVCT`: movement vector.
+* `PTWPLS`: position pulses.
+* `PTWWHE`: wheel information.
+* `PTWHPR`: heading, pitch, roll.
+* `PTACC`: imu acceleration.
+* `PTGYR`: imu gyroscope.
 
 ### Methods
 * `parse_msg!`: Parses an NMEA line/sentence and stores data in an NMEAData object; returns the message type.
-* `parse`: extends Base.parse and parses nmea strings to nmea type structs.
+* `nmea_parse`: Parses nmea strings to nmea type structs.
+* `is_string_supported`: Checks if a string is a valid standard type (also `NMEAParser.is_string_proprietary` checks for valid proprietary types).
+* `update`: Update the last received message of type T in the NMEAData object s with the given message msg.
 
 ## Sponsorship
 ![sponsor logo](https://www.volkerwessels.com/dynamics/modules/SFIL0200/view.php?fil_Id=366300&thumb_nr=26)
