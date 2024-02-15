@@ -1,4 +1,44 @@
 """
+    @do_parse(headers, header_str, items, system, valid)
+
+Macro for parsing NMEA sentences based on predefined headers.
+
+This macro generates code to match the given `header_str` against a list of regular expressions
+provided in the `headers` tuple. For each matching header, it generates code to call the corresponding
+type constructor with the relevant information from the NMEA sentence.
+
+# Arguments
+- `headers::Tuple`: A tuple containing pairs of regular expressions and corresponding NMEA types.
+- `header_str::AbstractString`: The NMEA sentence header string.
+- `items::AbstractString`: The NMEA sentence items.
+- `system::AbstractString`: The system identifier.
+- `valid::Bool`: A boolean indicating whether the NMEA sentence is valid.
+
+# Examples
+```julia
+@do_parse NMEA_TYPES header items system valid
+```
+
+"""
+macro do_parse(headers, header_str, items, system, valid)
+    code = Expr(:block)
+    for (header_regex, T) in eval(headers)
+        push!(code.args, quote
+            if (occursin($(header_regex), $(esc(header_str))))
+                return $T($(esc(items)), system=$(esc(system)), valid=$(esc(valid)))
+            end
+       end)
+    end
+    quote
+        $(code.args...)
+    end
+end
+
+function hash_msg(message::AbstractString)
+    xor.(Vector{UInt8}(split(message, "\$")[2])...)
+end
+
+"""
     get_system(mtype::SubString)
 
 Determine the system type based on the input `mtype`.
@@ -107,7 +147,26 @@ function is_string_supported(nmea_string::AbstractString)
         occursin(r"VTG$", header) ||
         occursin(r"ZDA$", header) ||
         occursin(r"PASHR$", header) ||
+        occursin(r"TWVCT$", header) ||
         occursin(r"TWPOS$", header) ||
+        occursin(r"TWPLS$", header) ||
+        occursin(r"TWWHE$", header) ||
+        occursin(r"TWHPR$", header))
+        return true
+    else
+        return false
+    end
+end
+
+function is_string_proprietary(nmea_string::AbstractString)
+    message, checksum  = contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
+    header = split(message, ',') |> first
+
+    if (occursin(r"PASHR$", header) ||
+        occursin(r"TWVCT$", header) ||
+        occursin(r"TWPOS$", header) ||
+        occursin(r"TWPLS$", header) ||
+        occursin(r"TWWHE$", header) ||
         occursin(r"TWHPR$", header))
         return true
     else
@@ -247,4 +306,15 @@ function vel_convert(flag::Char, value::Float64)::Float64
     else
         throw(ArgumentError("Velocity unit $flag is not supported"))
     end
+end
+
+function orientation_convert(flag::Char, value::Float64)::Float64
+    # TODO: implement
+    # if flag == 'R'
+    #     return value
+    # elseif flag == 'D'
+    # else
+    #     throw(ArgumentError("Orientation unit $flag is not supported"))
+    # end
+    return value
 end
