@@ -187,6 +187,7 @@ end
 
 @testset verbose = true "Test Proprietary Relative Position and Orientation types" begin
     @testset "PASHR" begin
+        @test NMEAParser.is_string_proprietary(raw"$PASHR,154155.50,153.17,T,9.68,2.29,-0.07,0.502,0.502,0.959,1,0*19")
         example = NMEAParser.nmea_parse(
             raw"$PASHR,154155.50,153.17,T,9.68,2.29,-0.07,0.502,0.502,0.959,1,0*19",
         )
@@ -202,6 +203,7 @@ end
     end
     @testset verbose = true "WPS based Position" begin
         @testset "PTWPOS" begin
+            @test NMEAParser.is_string_proprietary(raw"$PTWPOS,154922.69,0.7,M,0.7,M,0,M,0.989949,M,0.01,K,F*07")
             example = NMEAParser.nmea_parse(
                 raw"$PTWPOS,154922.69,0.7,M,0.7,M,0,M,0.989949,M,0.01,K,F*07",
             )
@@ -254,16 +256,19 @@ end
             )
         end
         @testset "PTWVCT" begin
+            @test NMEAParser.is_string_proprietary(raw"$PTWVCT,154932.45,0.7,M,0.7,R,0.4,M,0.989949,M*3e")
             example = NMEAParser.nmea_parse(
                 raw"$PTWVCT,154932.45,0.7,M,0.7,R,0.4,M,0.989949,M*3e",
             )
             @test example.valid
         end
         @testset "PTWPLS" begin
+            @test NMEAParser.is_string_proprietary(raw"$PTWPLS,021540.19,12,P,14,P,20,D*54")
             example = NMEAParser.nmea_parse(raw"$PTWPLS,021540.19,12,P,14,P,20,D*54")
             @test example.valid
         end
         @testset "PTWWHE" begin
+            @test NMEAParser.is_string_proprietary(raw"$PTWWHE,021539.62,12,0.3,M,F,12,0.3,M,F,0.01*30")
             example =
                 NMEAParser.nmea_parse(raw"$PTWWHE,021539.62,12,0.3,M,F,12,0.3,M,F,0.01*30")
             @test example.valid
@@ -272,6 +277,7 @@ end
 
     @testset verbose = true "IMU based orientation" begin
         @testset "TWHPR" begin
+            @test NMEAParser.is_string_proprietary(raw"$PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2E")
             example = NMEAParser.nmea_parse(
                 raw"$PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2E",
             )
@@ -293,10 +299,12 @@ end
             @test example_default.valid === true
         end
         @testset "PTACC" begin
+            @test NMEAParser.is_string_proprietary(raw"$PTACC,154156.65,0.777,0.123,0.011*43")
             example = NMEAParser.nmea_parse(raw"$PTACC,154156.65,0.777,0.123,0.011*43")
             @test example.valid
         end
         @testset "PTGYR" begin
+            @test NMEAParser.is_string_proprietary(raw"$PTGYR,156921.39,0.777,0.123,0.011*4d")
             example = NMEAParser.nmea_parse(raw"$PTGYR,156921.39,0.777,0.123,0.011*4d")
             @test example.valid
         end

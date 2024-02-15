@@ -175,11 +175,13 @@ function is_string_proprietary(nmea_string::AbstractString)
 
     if (
         occursin(r"PASHR$", header) ||
-        occursin(r"TWVCT$", header) ||
-        occursin(r"TWPOS$", header) ||
-        occursin(r"TWPLS$", header) ||
-        occursin(r"TWWHE$", header) ||
-        occursin(r"TWHPR$", header)
+        occursin(r"PTWPOS$", header) ||
+        occursin(r"PTWVCT$", header) ||
+        occursin(r"PTWPLS$", header) ||
+        occursin(r"PTWWHE$", header) ||
+        occursin(r"PTWHPR$", header) ||
+        occursin(r"PTACC$", header) ||
+        occursin(r"PTGYR$", header)
     )
         return true
     else
