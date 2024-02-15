@@ -3,6 +3,12 @@ uuid = "e33883a1-8aa8-4e6e-a42d-0daf9e203b40"
 authors = ["Nicholas Shindler <nick@shindler.tech>"]
 version = "2.0.0"
 
+[weakdeps]
+PrecompileTools = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+
+[extensions]
+PrecompileExt = "PrecompileTools"
+
 [compat]
 julia = "1.6"
 
