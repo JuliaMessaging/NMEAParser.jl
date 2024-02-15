@@ -1,46 +1,37 @@
 abstract type NMEAString end
 
 """
-    GGA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true)
+    struct GGA <: NMEAString
 
-A struct that represents a Global Positioning System Fix Data (GGA) sentence from the NMEA protocol.
-It contains information about the GPS system, time, location, fix quality, number of satellites,
-horizontal dilution of precision (HDOP), altitude, geoidal separation, age of differential corrections,
-and differential reference station ID.
+GPS Fix Data (GGA)
 
-# Arguments
-- `items::Array{D}`: An array of strings that contains the fields of the GGA sentence, separated by commas.
-- `system::AbstractString`: An optional keyword argument that specifies the type of GPS system used.
-    It can be "GPS", "GLONASS", "GALILEO", or "Combined". The default value is "UNKNOWN".
-- `valid::Bool`: An optional keyword argument that indicates whether the GGA sentence is valid or not. The default value is true.
+This NMEA data type represents information about the GPS fix, including latitude, longitude, altitude,
+number of satellites, and accuracy measures.
 
-# Returns
-- A `GGA` object with the following fields:
-    - `system::String`: The type of GPS system used.
-    - `time::Float64`: The UTC time of the fix in seconds.
-    - `latitude::Float64`: The latitude of the position in decimal degrees.
-    - `longitude::Float64`: The longitude of the position in decimal degrees.
-    - `fix_quality::String`: The quality of the fix. It can be one of the following values:
-        "INVALID", "GPS (SPS)", "DGPS", "PPS", "REAL TIME KINEMATIC", "FLOAT RTK",
-        "DEAD RECKONING", "MANUAL INPUT", or "SIMULATION".
-    - `num_sats::Int`: The number of satellites used in the fix.
-    - `HDOP::Float64`: The horizontal dilution of precision (HDOP) of the fix.
-    - `altitude::Float64`: The altitude above mean sea level (MSL) in meters.
-    - `geoidal_seperation::Float64`: The difference between the WGS-84 earth ellipsoid and mean sea level (MSL) in meters.
-    - `age_of_differential::Float64`: The time since the last SC104 type 1 or 9 update in seconds.
-        A value of 0 means no differential GPS correction is available.
-    - `diff_reference_id::Int`: The differential reference station ID.
-    - `valid::Bool`: Whether the GGA sentence is valid or not.
+# Fields
+- `system::String`: GPS, GLONASS, GALILEO, or Combined.
+- `time::Float64`: Time in seconds.
+- `latitude::Float64`: Latitude in decimal degrees.
+- `longitude::Float64`: Longitude in decimal degrees.
+- `fix_quality::String`: Quality of the fix.
+- `num_sats::Int`: Number of satellites used in the fix.
+- `HDOP::Float64`: Horizontal Dilution of Precision.
+- `altitude::Float64`: Altitude above mean sea level (MSL) in meters.
+- `geoidal_separation::Float64`: Geoidal separation in meters.
+- `age_of_differential::Float64`: Age of the differential data.
+- `diff_reference_id::Int`: Differential reference station ID.
+- `valid::Bool`: Flag indicating the validity of the data.
 
-The GGA sentence is one of the most common sentences used with GPS receivers.
-It contains information about position, elevation, time, number of satellites used, fix type, and correction age.
-The message ID for the GGA sentence is “GGA”. Here is an example of a GGA sentence:
+# Constructor
+```julia
+GGA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-`\$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47`
+# Examples
+```julia
+data = GGA(["GGA", "123456", "123.456", "N", "987.654", "W", "1", "8", "0.9", "123.4", "M", "54.3", "M", "1"])
+```
 
-This means that the GPS receiver reported its position as 48 degrees 7.038 minutes north latitude and 11 degrees 31.000 minutes east longitude at 12:35:19 UTC on the current date.
-The fix type was GPS (SPS), with 8 satellites used and a horizontal dilution of precision (HDOP) of 0.9.
-The altitude above mean sea level (MSL) was 545.4 meters, and the geoidal separation was 46.9 meters
 """
 struct GGA <: NMEAString
     system::String # GPS, GLONASS, GALILEO, or Combined
@@ -56,7 +47,11 @@ struct GGA <: NMEAString
     diff_reference_id::Int # differential reference station id
     valid::Bool
 
-    function GGA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+    function GGA(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
         fix_flag = tryparse(Int, items[7])
         fix_quality = "UNKNOWN"
         if (fix_flag == 0)
@@ -78,56 +73,53 @@ struct GGA <: NMEAString
         elseif (fix_flag == 8)
             fix_quality = "SIMULATION"
         end
-        new(system,
+        new(
+            system,
             _hms_to_secs(items[2]),
             _dms_to_dd(items[3], items[4]),
             _dms_to_dd(items[5], items[6]),
             fix_quality,
-            something(tryparse(Int, items[8]),0),
-            something(tryparse(Float64, items[9]),0.0),
-            something(tryparse(Float64, items[10]),0.0),
-            something(tryparse(Float64, items[12]),0.0),
-            something(tryparse(Float64, items[14]),0.0),
-            something(tryparse(Int, items[15]),0),
-            valid
-            )
+            something(tryparse(Int, items[8]), 0),
+            something(tryparse(Float64, items[9]), 0.0),
+            something(tryparse(Float64, items[10]), 0.0),
+            something(tryparse(Float64, items[12]), 0.0),
+            something(tryparse(Float64, items[14]), 0.0),
+            something(tryparse(Int, items[15]), 0),
+            valid,
+        )
     end # constructor GGA
 
 end # type GGA
 
+
 """
-    GSA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true)
+    struct GSA <: NMEAString
 
-A struct that represents a GNSS DOP and Active Satellites (GSA) sentence from the NMEA protocol.
-It contains information about the GPS system, mode, current mode, satellite IDs,
-position dilution of precision (PDOP), horizontal dilution of precision (HDOP), and vertical dilution of precision (VDOP).
+GNSS DOP and Active Satellites (GSA)
 
-# Arguments
-- `items::Array{D}`: An array of strings that contains the fields of the GSA sentence, separated by commas.
-- `system::AbstractString`: An optional keyword argument that specifies the type of GPS system used.
-It can be "GPS", "GLONASS", "GALILEO", or "Combined". The default value is "UNKNOWN".
-- `valid::Bool`: An optional keyword argument that indicates whether the GSA sentence is valid or not. The default value is true.
+This NMEA data type represents information about the GNSS Dilution of Precision (DOP) and the active
+satellites used for navigation.
 
-# Returns
-- A `GSA` object with the following fields:
-    - `system::String`: The type of GPS system used.
-    - `mode::Char`: The mode of operation. It can be 'A' for automatic or 'M' for manual.
-    - `current_mode::Int`: The current mode of operation. It can be one of the following values: 1 for no fix, 2 for 2D fix, or 3 for 3D fix.
-    - `sat_ids::Vector{Int}`: A vector of integers that contains the IDs of the satellites used in the fix.
-    - `PDOP::Float64`: The position dilution of precision (PDOP) of the fix.
-    - `HDOP::Float64`: The horizontal dilution of precision (HDOP) of the fix.
-    - `VDOP::Float64`: The vertical dilution of precision (VDOP) of the fix.
-    - `valid::Bool`: Whether the GSA sentence is valid or not.
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `mode::Char`: Mode of operation (A = Automatic, M = Manual).
+- `current_mode::Int`: Operating mode (1 = Fix not available, 2 = 2D fix, 3 = 3D fix).
+- `sat_ids::Vector{Int}`: Vector of satellite IDs used in the fix.
+- `PDOP::Float64`: Position Dilution of Precision.
+- `HDOP::Float64`: Horizontal Dilution of Precision.
+- `VDOP::Float64`: Vertical Dilution of Precision.
+- `valid::Bool`: Flag indicating the validity of the data.
 
-The GSA sentence contains information about the GNSS DOP and active satellites.
-It indicates the mode of operation, the current mode of operation, the satellite IDs used in the fix,
-and the position dilution of precision (PDOP), horizontal dilution of precision (HDOP), and vertical dilution of precision (VDOP).
-The message ID for the GSA sentence is “GSA”. Here is an example of a GSA sentence:
+# Constructor
+```julia
+GSA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-`\$GNGSA,A,3,21,5,29,25,12,10,26,2,,,,,1.2,0.7,1.0*27`
+# Examples
+```julia
+data = GSA(["GSA", "M", "3", "1", "2", "3", "1.2", "0.9", "1.5"])
+```
 
-This means that the GNSS receiver was in automatic mode and had a 3D fix using satellites with IDs 21, 5, 29, 25, 12, 10, 26, and 2.
-The PDOP was 1.2, the HDOP was 0.7, and the VDOP was 1.0
 """
 struct GSA <: NMEAString
     system::String
@@ -139,55 +131,58 @@ struct GSA <: NMEAString
     VDOP::Float64
     valid::Bool
 
-    function GSA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+    function GSA(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
         sat_ids = Vector{Int}()
-        for i = 4:length(items) - 3
+        for i = 4:length(items)-3
             if (items[i] |> strip |> isempty)
                 break
             end
             push!(sat_ids, tryparse(Int, items[i]))
         end
-        new(system,
+        new(
+            system,
             Char(items[2][1]),
-            something(tryparse(Int, items[3]),0),
+            something(tryparse(Int, items[3]), 0),
             sat_ids,
-            something(tryparse(Float64, items[end - 2]),0.0),
-            something(tryparse(Float64, items[end - 1]),0.0),
-            something(tryparse(Float64, items[end]),0.0),
-            valid)
+            something(tryparse(Float64, items[end-2]), 0.0),
+            something(tryparse(Float64, items[end-1]), 0.0),
+            something(tryparse(Float64, items[end]), 0.0),
+            valid,
+        )
     end # constructor GSA
 end # type GSA
 
 """
-    ZDA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true)
+    struct ZDA <: NMEAString
 
-A struct that represents a Time and Date (ZDA) sentence from the NMEA protocol. It contains information about the GPS system, time, date, and local time zone.
+Time and Date (ZDA)
 
-# Arguments
-- `items::Array{D}`: An array of strings that contains the fields of the ZDA sentence, separated by commas.
-- `system::AbstractString`: An optional keyword argument that specifies the type of GPS system used. It can be "GPS", "GLONASS", "GALILEO", or "Combined". The default value is "UNKNOWN".
-- `valid::Bool`: An optional keyword argument that indicates whether the ZDA sentence is valid or not. The default value is true.
+This NMEA data type represents information about the current time and date from a GNSS receiver.
 
-# Returns
-- A `ZDA` object with the following fields:
-    - `system::String`: The type of GPS system used.
-    - `time::Float64`: The UTC time of the fix in seconds.
-    - `day::Int`: The day of the month (1-31).
-    - `month::Int`: The month of the year (1-12).
-    - `year::Int`: The year (four digits).
-    - `zone_hrs::Int`: The local time zone offset from UTC in hours.
-    - `zone_mins::Int`: The local time zone offset from UTC in minutes.
-    - `valid::Bool`: Whether the ZDA sentence is valid or not.
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `day::Int`: Day of the month.
+- `month::Int`: Month of the year.
+- `year::Int`: Year.
+- `zone_hrs::Int`: Time zone offset in hours.
+- `zone_mins::Int`: Time zone offset in minutes.
+- `valid::Bool`: Flag indicating the validity of the data.
 
-An example of a ZDA sentence is:
+# Constructor
+```julia
+ZDA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-`\$GPZDA,201530.00,04,07,2002,00,00*60`
+# Examples
+```julia
+data = ZDA(["ZDA", "123456", "15", "02", "2024", "5", "30"])
+```
 
-This means that the GPS system reported the date and time as 20:15:30.00 UTC on July 4th, 2002, with no local time zone offset1.
-
-The purpose of the ZDA sentence is to provide a reliable and accurate source of date and time information for applications that require synchronization or logging.
-For example, some scientific instruments or sensors may need to record the exact time of their measurements or events.
-The ZDA sentence can also be used to adjust the internal clock of the receiver or other devices
 """
 struct ZDA <: NMEAString
     system::String
@@ -199,41 +194,55 @@ struct ZDA <: NMEAString
     zone_mins::Int
     valid::Bool
 
-    function ZDA(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        new(system,
-        _hms_to_secs(items[2]),
-        something(tryparse(Int, items[3]),0),
-        something(tryparse(Int, items[4]),0),
-        something(tryparse(Int, items[5]),0),
-        something(tryparse(Int, items[6]),0),
-        something(tryparse(Int, items[7]),0),
-        valid)
+    function ZDA(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Int, items[3]), 0),
+            something(tryparse(Int, items[4]), 0),
+            something(tryparse(Int, items[5]), 0),
+            something(tryparse(Int, items[6]), 0),
+            something(tryparse(Int, items[7]), 0),
+            valid,
+        )
     end # constructor ZDA
 
 end # type ZDA
 
 """
-    GBS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true)
+    struct GBS <: NMEAString
 
-A struct that represents a GBS NMEA string, which is a message that contains
-the error estimates of the position fix from a global navigation satellite system (GNSS).
+GNSS Satellite Fault Detection (GBS)
+
+This NMEA data type represents information about satellite fault detection, including error estimates
+and probabilities.
 
 # Fields
-- `system::String`: The name of the system that produced the message.
-- `time::Float64`: The time of the message in seconds since midnight UTC.
-- `lat_error::Float64`: The expected error in latitude in meters.
-- `long_error::Float64`: The expected error in longitude in meters.
-- `alt_error::Float64`: The expected error in altitude in meters.
-- `failed_PRN::Int`: The pseudo-random noise (PRN) number of the satellite that has failed or is likely to fail.
-- `prob_of_missed::Float64`: The probability of missed detection for the failed satellite.
-- `excluded_meas_err::Float64`: The estimated error caused by excluding the measurement from the failed satellite.
-- `standard_deviation::Float64`: The standard deviation of the residual errors for all satellites used in the position fix.
-- `valid::Bool`: A flag that indicates whether the message is valid or not.
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `lat_error::Float64`: Latitude error estimate.
+- `long_error::Float64`: Longitude error estimate.
+- `alt_error::Float64`: Altitude error estimate.
+- `failed_PRN::Int`: PRN of the failed satellite.
+- `prob_of_missed::Float64`: Probability of missed detection.
+- `excluded_meas_err::Float64`: Excluded measurement error.
+- `standard_deviation::Float64`: Standard deviation of the measurements.
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
-The constructor takes an array of strings as an argument, which are the items in
-the GBS NMEA string. It also takes optional keyword arguments for the system name
-and the validity flag. It parses the items and assigns them to the corresponding fields.
+```julia
+GBS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = GBS(["GBS", "123456", "0.1", "0.2", "0.3", "5", "0.01", "0.05", "0.02"])
+```
+
 """
 struct GBS <: NMEAString
     system::String
@@ -247,45 +256,52 @@ struct GBS <: NMEAString
     standard_deviation::Float64
     valid::Bool
 
-    function GBS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        new(system,
-        _hms_to_secs(items[2]),
-        something(tryparse(Float64, items[3]),0.0),
-        something(tryparse(Float64, items[4]),0.0),
-        something(tryparse(Float64, items[5]),0.0),
-        something(tryparse(Int, items[6]),0),
-        something(tryparse(Float64, items[7]),0.0),
-        something(tryparse(Float64, items[8]),0.0),
-        something(tryparse(Float64, items[9]),0.0),
-        valid,
+    function GBS(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Float64, items[3]), 0.0),
+            something(tryparse(Float64, items[4]), 0.0),
+            something(tryparse(Float64, items[5]), 0.0),
+            something(tryparse(Int, items[6]), 0),
+            something(tryparse(Float64, items[7]), 0.0),
+            something(tryparse(Float64, items[8]), 0.0),
+            something(tryparse(Float64, items[9]), 0.0),
+            valid,
         )
     end # constructor GBS
 end # type GBS
 
 """
-    GLL <: NMEAString
+    struct GLL <: NMEAString
 
-A struct for handling NMEA message data of type GLL, which contains geographic position and time information.
+Geographic Latitude and Longitude (GLL)
+
+This NMEA data type represents information about geographic latitude and longitude.
 
 # Fields
-
-- `system::String`: the name of the GNSS system that produced the data (e.g. "GPS", "GLONASS", etc.)
-- `latitude::Float64`: the latitude of the position in decimal degrees
-- `longitude::Float64`: the longitude of the position in decimal degrees
-- `time::Float64`: the UTC time of the position in seconds
-- `status::Bool`: whether the position is valid (`true`) or not (`false`)
-- `mode::Char`: the mode indicator of the position fix (e.g. 'A' for autonomous, 'D' for differential, etc.)
-- `valid::Bool`: whether the message data is valid (`true`) or not (`false`)
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `latitude::Float64`: Latitude in decimal degrees.
+- `longitude::Float64`: Longitude in decimal degrees.
+- `time::Float64`: Time in seconds.
+- `status::Bool`: Status indicator (true if valid fix, false otherwise).
+- `mode::Char`: Mode indicator ('A' for autonomous mode).
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
+```julia
+GLL(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-The constructor takes an array of strings as an argument, which should contain the fields of the GLL message in order, separated by commas.
-Optionally, a keyword argument `system` can be given to specify the GNSS system name, and a keyword argument `valid` can be given to indicate the validity of the message data.
-If not given, these arguments default to "UNKNOWN" and `true`, respectively.
+# Examples
+```julia
+data = GLL(["GLL", "12.3456", "N", "98.7654", "W", "123456", "A"])
+```
 
-The GLL message contains the latitude, longitude, time, and status of the position fix obtained by the receiver.
-The status indicates whether the position is valid or not, and the mode indicates whether the position is obtained autonomously, differentially, or by other means.
-The GLL message is useful for applications that need to know the exact location and time of the receiver.
 """
 struct GLL <: NMEAString
     system::String
@@ -296,67 +312,54 @@ struct GLL <: NMEAString
     mode::Char
     valid::Bool
 
-    function GLL(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        new(system,
+    function GLL(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
             _dms_to_dd(items[2], items[3]),
             _dms_to_dd(items[4], items[5]),
             _hms_to_secs(items[6]),
             items[7] == "A" ? true : false,
             items[8] != "" ? Char(items[8][1]) : 'N',
-            valid)
+            valid,
+        )
     end # constructor GLL
 end # type GLL
 
-"""
-    SVData <: NMEAString
-
-A struct for handling NMEA message data of type SVData, which contains information about one satellite in view of a GNSS receiver.
-
-# Fields
-
-- `PRN::Int`: the PRN number of the satellite, which identifies it uniquely within its system
-- `elevation::Int`: the elevation angle of the satellite in degrees, relative to the horizon
-- `azimuth::Int`: the azimuth angle of the satellite in degrees, relative to the true north
-- `SNR::Int`: the signal-to-noise ratio of the satellite in decibels, which measures the quality of the signal received from the satellite
-
-The SVData struct is used to store and process information about one satellite that is in view of a GNSS receiver.
-It is usually part of a GSV message, which contains information about all the satellites in view.
-The SVData struct can be used to determine the availability and quality of the satellites that can be used for positioning.
-"""
 struct SVData <: NMEAString
     PRN::Int
     elevation::Int
     azimuth::Int
     SNR::Int
 end # type SVData
-
 """
-    GSV <: NMEAString
+    struct GSV <: NMEAString
 
-A struct for handling NMEA message data of type GSV, which contains information about the GNSS satellites in view.
+Satellites in View (GSV)
+
+This NMEA data type represents information about the satellites in view and their signal strength.
 
 # Fields
-
-- `system::String`: the name of the GNSS system that produced the data (e.g. "GPS", "GLONASS", etc.)
-- `msg_total::Int`: the total number of GSV messages in this cycle
-- `msg_num::Int`: the sequence number of this message in this cycle
-- `sat_total::Int`: the total number of satellites in view
-- `SV_data::Vector{Int}`: an array of SVData structs, each containing information about one satellite in view
-- `valid::Bool`: whether the message data is valid (`true`) or not (`false`)
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `msg_total::Int`: Total number of GSV messages for this cycle.
+- `msg_num::Int`: Number of this GSV message.
+- `sat_total::Int`: Total number of satellites in view.
+- `SV_data::Vector{SVData}`: Vector of satellite data, each containing PRN, elevation, azimuth, and SNR.
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
+```julia
+GSV(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-The constructor takes an array of strings as an argument, which should contain the fields of the GSV message in order,
-separated by commas. Optionally, a keyword argument `system` can be given to specify the GNSS system name,
-and a keyword argument `valid` can be given to indicate the validity of the message data.
-If not given, these arguments default to "UNKNOWN" and `true`, respectively.
+# Examples
+```julia
+data = GSV(["GSV", "3", "1", "9", "1", "01", "30", "45", "20", "02", "60", "180", "25", "03", "15", "300", "15"])
+```
 
-The GSV message contains information about the satellites that are in view of the receiver,
-such as their PRN numbers, elevations, azimuths, and signal-to-noise ratios.
-The PRN number identifies the satellite uniquely within its system,
-and the elevation and azimuth indicate the direction of the satellite relative to the receiver.
-The signal-to-noise ratio measures the quality of the signal received from the satellite.
-The GSV message is useful for applications that need to know the availability and quality of the satellites that can be used for positioning
 """
 struct GSV <: NMEAString
     system::String
@@ -366,58 +369,61 @@ struct GSV <: NMEAString
     SV_data::Vector{SVData}
     valid::Bool
 
-    function GSV(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-    new(system,
-        something(tryparse(Int, items[2]),0),
-        something(tryparse(Int, items[3]),0),
-        something(tryparse(Int, items[4]),0),
-        [SVData(
-            something(tryparse(Int, items[i]),0),
-            something(tryparse(Int, items[i + 1]),0),
-            something(tryparse(Int, items[i + 2]),0),
-            something(tryparse(Int, items[i + 3]),0)
-            ) for i in 5:4:length(items)-4],
-        valid)
+    function GSV(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            something(tryparse(Int, items[2]), 0),
+            something(tryparse(Int, items[3]), 0),
+            something(tryparse(Int, items[4]), 0),
+            [
+                SVData(
+                    something(tryparse(Int, items[i]), 0),
+                    something(tryparse(Int, items[i+1]), 0),
+                    something(tryparse(Int, items[i+2]), 0),
+                    something(tryparse(Int, items[i+3]), 0),
+                ) for i = 5:4:length(items)-4
+            ],
+            valid,
+        )
     end # constructor GSV
 end # type GSV
 
 """
-    RMC <: NMEAString
+    struct RMC <: NMEAString
 
-A type that represents a Recommended Minimum Navigation Information (RMC) message,
-which is one of the most common types of NMEA messages. NMEA stands for National Marine Electronics Association,
-and it is a standard protocol for communication between marine electronic devices.
-An RMC message provides information about the position, velocity, time, date, and magnetic variation of a GPS receiver.
+Recommended Minimum Navigation Information (RMC)
+
+This NMEA data type represents recommended minimum navigation information.
 
 # Fields
-- `system::String`: The system identifier, indicating the source of the message (e.g. "GPS", "GLONASS", "UNKNOWN").
-- `time::Float64`: The UTC time of the position fix, in seconds since midnight.
-- `status::Bool`: The status indicator, either true for active or false for void (invalid).
-- `latitude::Float64`: The latitude of the position, in decimal degrees.
-- `longitude::Float64`: The longitude of the position, in decimal degrees.
-- `sog::Float64`: The speed over ground, in knots.
-- `cog::Float64`: The track angle, in degrees true (not magnetic).
-- `day::String`: The day of the position fix, in two digits.
-- `month::String`: The month of the position fix, in two digits.
-- `year::String`: The year of the position fix, in two digits.
-- `magvar::Float64`: The magnetic variation, in degrees. A negative value indicates west and a positive value indicates east.
-- `mode::Char`: The mode indicator, indicating the type of fix. It can be one of the following values:
-    - 'A' for autonomous (GPS only)
-    - 'D' for differential (DGPS)
-    - 'E' for estimated
-    - 'F' for float RTK
-    - 'M' for manual input
-    - 'N' for no fix
-    - 'P' for precise
-    - 'R' for real time kinematic
-    - 'S' for simulator
-- `valid::Bool`: A flag indicating whether the message is valid or not.
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `status::Bool`: Status indicator (true if valid fix, false otherwise).
+- `latitude::Float64`: Latitude in decimal degrees.
+- `longitude::Float64`: Longitude in decimal degrees.
+- `sog::Float64`: Speed over ground in knots.
+- `cog::Float64`: Course over ground in degrees.
+- `day::String`: Day of the month.
+- `month::String`: Month of the year.
+- `year::String`: Year.
+- `magvar::Float64`: Magnetic variation.
+- `mode::Char`: Mode indicator ('A' for autonomous mode).
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
-The constructor takes an array of strings as an argument, which are the items of an RMC sentence.
-It also takes an optional keyword argument `system`, which specifies the system identifier.
-If not given, it defaults to "UNKNOWN". Another optional keyword argument is `valid`,
-which specifies whether the message is valid or not. If not given, it defaults to true.
+```julia
+RMC(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = RMC(["RMC", "123456", "A", "12.3456", "N", "98.7654", "W", "5.0", "90.0", "150225", "5.0", "W", "A"])
+```
+
 """
 struct RMC <: NMEAString
     system::String
@@ -434,68 +440,59 @@ struct RMC <: NMEAString
     mode::Char
     valid::Bool
 
-    function RMC(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        new(system,
+    function RMC(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
             _hms_to_secs(items[2]),
             items[3] == "A",
             _dms_to_dd(items[4], items[5]),
             _dms_to_dd(items[6], items[7]),
-            something(tryparse(Float64, items[8]),0.0),
-            something(tryparse(Float64, items[9]),0.0),
+            something(tryparse(Float64, items[8]), 0.0),
+            something(tryparse(Float64, items[9]), 0.0),
             String(items[10][1:2]),
             String(items[10][3:4]),
             String(items[10][5:6]),
-            something((items[12] == "W" || items[12] == "S") ? (tryparse(Float64, items[11]) * -1) : (tryparse(Float64, items[11])),0.0),
+            something(
+                (items[12] == "W" || items[12] == "S") ?
+                (tryparse(Float64, items[11]) * -1) : (tryparse(Float64, items[11])),
+                0.0,
+            ),
             Char(items[3][1]),
-            valid)
+            valid,
+        )
     end # constructor RMC
 end # type RMC
 
 """
-    VTG <: NMEAString
+    struct VTG <: NMEAString
 
-A type that represents a Track made good and speed over ground (VTG) message,
-which is one of the types of NMEA messages. NMEA stands for National Marine Electronics Association,
-and it is a standard protocol for communication between marine electronic devices.
-A VTG message provides information about the actual track made good and speed over ground of a GPS receiver.
+Track Made Good and Ground Speed (VTG)
+
+This NMEA data type represents information about the track made good (course) and ground speed.
 
 # Fields
-- `system::String`: The system identifier, indicating the source of the message (e.g. "GPS", "GLONASS", "UNKNOWN").
-- `CoG_true::Float64`: The track made good (degrees true).
-- `CoG_mag::Float64`: The track made good (degrees magnetic).
-- `SoG_knots::Float64`: The speed over ground, in knots.
-- `SoG_kmhr::Float64`: The speed over ground, in kilometers per hour (kph).
-- `mode::Char`: The mode indicator, indicating the type of fix. It can be one of the following values:
-    - 'A' for autonomous (GPS only)
-    - 'D' for differential (DGPS)
-    - 'E' for estimated (dead reckoning) mode
-    - 'M' for manual input mode
-    - 'S' for simulator mode
-    - 'N' for data not valid
-- `valid::Bool`: A flag indicating whether the message is valid or not.
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `CoG_true::Float64`: Course over ground in true degrees.
+- `CoG_mag::Float64`: Course over ground in magnetic degrees.
+- `SoG_knots::Float64`: Speed over ground in knots.
+- `SoG_kmhr::Float64`: Speed over ground in kilometers per hour.
+- `mode::Char`: Mode indicator ('A' for autonomous mode).
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
-The constructor takes an array of strings as an argument, which are the items of a VTG sentence.
-It also takes an optional keyword argument `system`, which specifies the system identifier.
-If not given, it defaults to "UNKNOWN". Another optional keyword argument is `valid`,
-which specifies whether the message is valid or not. If not given, it defaults to true.
+```julia
+VTG(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-# Example
-A message has the following format: `\$GPVTG,x.x,T,x.x,M,x.x,N,x.x,K,m*hh`
+# Examples
+```julia
+data = VTG(["VTG", "90.0", "T", "45.0", "M", "5.0", "K", "A"])
+```
 
-
-For example, the following VTG message:
-
-`\$GPVTG,140.88,T,M,8.04,N,14.89,K,D*05`
-
-Means that:
-
-* The track made good is 140.88 degrees true.
-* The track made good is not available in degrees magnetic.
-* The speed over ground is 8.04 knots.
-* The speed over ground is 14.89 kph.
-* The mode indicator is differential (DGPS).
-* The checksum data is 05.
 """
 struct VTG <: NMEAString
     system::String
@@ -506,54 +503,51 @@ struct VTG <: NMEAString
     mode::Char
     valid::Bool
 
-    function VTG(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        new(system,
-            something(tryparse(Float64, items[2]),0.0),
-            something(tryparse(Float64, items[4]),0.0),
-            something(tryparse(Float64, items[6]),0.0),
-            something(tryparse(Float64, items[8]),0.0),
+    function VTG(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            something(tryparse(Float64, items[2]), 0.0),
+            something(tryparse(Float64, items[4]), 0.0),
+            something(tryparse(Float64, items[6]), 0.0),
+            something(tryparse(Float64, items[8]), 0.0),
             Char(items[10][1]),
-            valid)
+            valid,
+        )
     end # constructor VTG
 
 end # type VTG
 
 """
-    DTM <: NMEAString
+    struct DTM <: NMEAString
 
-A type that represents a Datum reference (DTM) message, which is one of the types of NMEA messages.
-NMEA stands for National Marine Electronics Association, and it is a standard protocol for communication between marine electronic devices.
-A DTM message identifies the local geodetic datum and datum offsets from a reference datum.
-This sentence is used to define the datum to which a position location, and geographic locations in subsequent sentences, is referenced[^1^][1].
+Datum Reference (DTM)
+
+This NMEA data type represents information about a datum reference.
 
 # Fields
-- `system::String`: The system identifier, indicating the source of the message (e.g. "GPS", "GLONASS", "UNKNOWN").
-- `local_datum_code::String`: The local datum code (CCC), which can be one of the following values[^1^][1]:
-    - W84 – WGS-84
-    - W72 – WGS-72
-    - S85 – SGS85
-    - P90 – PE90
-    - 999 – User-defined IHO datum code
-- `local_datum_subcode::String`: The local datum subdivision code (x).
-- `lat_offset::Float64`: The latitude offset, in minutes (x.x). A negative value indicates south and a positive value indicates north.
-- `long_offset::Float64`: The longitude offset, in minutes (x.x). A negative value indicates west and a positive value indicates east.
-- `alt_offset::Float64`: The altitude offset, in meters (x.x).
-- `ref_datum::String`: The reference datum code (CCC), which can be one of the following values[^1^][1]:
-    - W84 – WGS-84
-    - W72 – WGS-72
-    - S85 – SGS85
-    - P90 – PE90
-    - 999 – User-defined IHO datum code
-- `valid::Bool`: A flag indicating whether the message is valid or not.
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `local_datum_code::String`: Local datum code.
+- `local_datum_subcode::String`: Local datum subcode.
+- `lat_offset::Float64`: Latitude offset in meters.
+- `long_offset::Float64`: Longitude offset in meters.
+- `alt_offset::Float64`: Altitude offset in meters.
+- `ref_datum::String`: Reference datum.
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
-The constructor takes an array of strings as an argument, which are the items of a DTM sentence.
-It also takes an optional keyword argument `system`, which specifies the system identifier.
-If not given, it defaults to "UNKNOWN". Another optional keyword argument is `valid`,
-which specifies whether the message is valid or not. If not given, it defaults to true.
+```julia
+DTM(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-# Example
-`\$GPDTM,W84,,0.000000,N,0.000000,E,0.0,W84*6F`
+# Examples
+```julia
+data = DTM(["DTM", "W84", "W", "0.5", "W", "1.0", "M", "W84"])
+```
+
 """
 struct DTM <: NMEAString
     system::String
@@ -565,54 +559,70 @@ struct DTM <: NMEAString
     ref_datum::String
     valid::Bool
 
-    function DTM(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        new(system,
+    function DTM(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
             String(items[2]),
             String(items[3]),
-            items[5] == "S" ? something(tryparse(Float64, items[4]),0.0)*-1 : something(tryparse(Float64, items[4]),0.0),
-            items[7] == "W" ? something(tryparse(Float64, items[6]),0.0)*-1 : something(tryparse(Float64, items[6]),0.0),
-            something(tryparse(Float64, items[8]),0.0),
+            items[5] == "S" ? something(tryparse(Float64, items[4]), 0.0) * -1 :
+            something(tryparse(Float64, items[4]), 0.0),
+            items[7] == "W" ? something(tryparse(Float64, items[6]), 0.0) * -1 :
+            something(tryparse(Float64, items[6]), 0.0),
+            something(tryparse(Float64, items[8]), 0.0),
             String(items[9]),
-            valid)
+            valid,
+        )
     end # constructor DTM
 end # type DTM
 
-
 """
-    PASHR(system, time, heading, heading_type, roll, pitch, heave, roll_accuracy,
-          pitch_accuracy, heading_accuracy, aiding_code, ins_code, valid)
+    struct PASHR <: NMEAString
 
-A struct that represents a PASHR NMEA string, which is a message that contains
-position and attitude data from an inertial navigation system (INS).
+Inertial Attitude Data (PASHR)
+
+This NMEA data type represents inertial attitude data, including heading, roll, pitch, and heave.
 
 # Fields
-- `system::String`: The name of the system that produced the message.
-- `time::Float64`: The time of the message in seconds since midnight UTC.
-- `heading::Float64`: The heading angle in degrees clockwise from north.
-- `heading_type::Char`: The type of heading: 'T' for true or 'M' for magnetic.
-- `roll::Float64`: The roll angle in degrees. Positive values indicate right roll.
-- `pitch::Float64`: The pitch angle in degrees. Positive values indicate nose up.
-- `heave::Float64`: The heave displacement in meters. Positive values indicate upward motion.
-- `roll_accuracy::Float64`: The standard deviation of the roll angle in degrees.
-- `pitch_accuracy::Float64`: The standard deviation of the pitch angle in degrees.
-- `heading_accuracy::Float64`: The standard deviation of the heading angle in degrees.
-- `aiding_code::Int`: A code that indicates the type of aiding used by the INS.
-- `ins_code::Int`: A code that indicates the status of the INS.
-- `valid::Bool`: A flag that indicates whether the message is valid or not.
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `heading::Float64`: Heading in decimal degrees.
+- `heading_type::Bool`: True heading indicator (true if heading is relative to true north).
+- `roll::Float64`: Roll in decimal degrees.
+- `pitch::Float64`: Pitch in decimal degrees.
+- `heave::Float64`: Heave in meters.
+- `roll_accuracy::Float64`: Roll accuracy (standard deviation in decimal degrees).
+- `pitch_accuracy::Float64`: Pitch accuracy (standard deviation in decimal degrees).
+- `heading_accuracy::Float64`: Heading accuracy (standard deviation in decimal degrees).
+- `aiding_code::Int`: GPS Update Quality Flag (0 = No position, 1 = Non-RTK fixed, 2 = RTK fixed).
+- `ins_code::Int`: INS Status Flag (0 = Pre-Alignment, 1 = Post-Alignment).
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
-The constructor takes an array of strings as an argument, which are the items in
-the PASHR NMEA string. It also takes optional keyword arguments for the system name
-and the validity flag. It parses the items and assigns them to the corresponding fields.
+```julia
+PASHR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
 
-# Example
-`\$PASHR,154155.50,153.17,T,9.68,2.29,-0.07,0.502,0.502,0.959,1*19`
+# Examples
+```julia
+data = PASHR(["PASHR", "123456", "45.0", "T", "15.0", "-10.0", "2.0", "0.1", "0.1", "0.2", "2", "1"])
+```
+
 """
 struct PASHR <: NMEAString
+    # Inertial attitude data
+    # $PASHR,Time[hhmmss.sss],Heading[decimal degrees],True Heading[T displayed if heading is relative to true north.],Roll[decimal degrees],Pitch[decimal degrees],Heave[meters],Roll Accuracy,Pitch Accuracy,Headding Accuracy,GPS Update Quality Flag,INS Status Flag*CHECKSUM
+    # Heading: The heading is the inertial azimuth calculated from the IMU gyros and the SPAN filters.
+    # Accuracy: standard deviation in decimal degrees
+    # GPS Update Quality Flag: [0 = No position, 1 = All non-RTK fixed integer positions, 2 = RTK fixed integer position]
+    # INS Status Flag: [0 = All SPAN Pre-Alignment INS Status, 1 = All SPAN Post-Alignment INS Status (INS_ALIGNMENT_COMPLETE, INS_SOLUTION_GOOD, INS_HIGH_VARIANCE, INS_SOLUTION_FREE)]
     system::String
     time::Float64
     heading::Float64
-    heading_type::String
+    heading_type::Bool
     roll::Float64
     pitch::Float64
     heave::Float64
@@ -623,47 +633,62 @@ struct PASHR <: NMEAString
     ins_code::Int
     valid::Bool
 
-    function PASHR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        new(system,
+    function PASHR(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
             _hms_to_secs(items[2]),
             something(tryparse(Float64, items[3]), 0.0),
-            items[4]=="T" ? "True" : "",
-            something(tryparse(Float64, items[5]),0.0),
-            something(tryparse(Float64, items[6]),0.0),
-            something(tryparse(Float64, items[7]),0.0),
-            something(tryparse(Float64, items[8]),0.0),
-            something(tryparse(Float64, items[9]),0.0),
-            something(tryparse(Float64, items[10]),0.0),
-            something(tryparse(Int,items[11]),0),
-            length(items)>11 ? something(tryparse(Int,items[12]),0) : 0,
-            valid)
+            items[4] == "T" ? true : false,
+            something(tryparse(Float64, items[5]), 0.0),
+            something(tryparse(Float64, items[6]), 0.0),
+            something(tryparse(Float64, items[7]), 0.0),
+            something(tryparse(Float64, items[8]), 0.0),
+            something(tryparse(Float64, items[9]), 0.0),
+            something(tryparse(Float64, items[10]), 0.0),
+            something(tryparse(Int, items[11]), 0),
+            length(items) > 11 ? something(tryparse(Int, items[12]), 0) : 0,
+            valid,
+        )
     end
 
 end # type PASHR
 
 """
-    TWPOS(system, time, xpose, ypose, zpose, distance, velocity, valid)
+    struct PTWPOS <: NMEAString
 
-A struct that represents a TWPOS NMEA string, which is a message that contains
-the position and velocity data from a transponder.
+Position (PTWPOS)
+
+This NMEA data type represents position information.
 
 # Fields
-- `system::String`: The name of the system that produced the message.
-- `time::Float64`: The time of the message in seconds since midnight UTC.
-- `xpose::Float64`: The x-coordinate of the position in meters.
-- `ypose::Float64`: The y-coordinate of the position in meters.
-- `zpose::Float64`: The z-coordinate of the position in meters.
-- `distance::Float64`: The distance from the origin in meters.
-- `velocity::Float64`: The velocity in meters per second.
-- `valid::Bool`: A flag that indicates whether the message is valid or not.
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `xpose::Float64`: X position in meters.
+- `ypose::Float64`: Y position in meters.
+- `zpose::Float64`: Z position in meters.
+- `distance::Float64`: Distance in meters.
+- `velocity::Float64`: Velocity in kilometers per hour.
+- `direction::Char`: Direction indicator ('F' for forward, 'B' for backward).
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
-The constructor takes an array of strings as an argument, which are the items in
-the TWPOS NMEA string. It also takes optional keyword arguments for the system name
-and the validity flag. It parses the items and converts them to the appropriate units
-and assigns them to the corresponding fields.
+```julia
+PTWPOS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = PTWPOS(["PTWPOS", "123456", "45.678", "M", "123.456", "M", "789.012", "M", "456.789", "M", "5.0", "K", "F"])
+```
+
 """
-struct TWPOS <: NMEAString
+struct PTWPOS <: NMEAString
+    # Position
+    # $PTWPOS,TIME,X,X_UNIT[Meters],Y,Y_UNIT[Meters],Z,Z_UNIT[Meters],DISTANCE,D_UNIT[Meters],SPEED,S_UNIT[Kilometers per hour],DIRECTION[Forward/Backward]*CHECKSUM
     system::String
     time::Float64
     xpose::Float64
@@ -674,56 +699,233 @@ struct TWPOS <: NMEAString
     direction::Char
     valid::Bool
 
-    function TWPOS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        # Todo check second value for unit (M == meter, K == kilometer, F == feet, N == miles)
-        # and update accordingly to meters
-        # f /= 0.3048 n *= 0.621371192237 k *= 1000
-        new(system,
+    function PTWPOS(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
             _hms_to_secs(items[2]),
-            pos_convert(only(items[4]), something(tryparse(Float64, items[3]),0.0)),
-            pos_convert(only(items[6]), something(tryparse(Float64, items[5]),0.0)),
-            pos_convert(only(items[8]), something(tryparse(Float64, items[7]),0.0)),
-            pos_convert(only(items[10]), something(tryparse(Float64, items[9]),0.0)),
-            vel_convert(only(items[12]), something(tryparse(Float64, items[11]),0.0)),
-            Char(items[13][1]),
-            valid)
-    end # constructor TWPOS
-end # type TWPOS
+            pos_convert(only(items[4]), something(tryparse(Float64, items[3]), 0.0)),
+            pos_convert(only(items[6]), something(tryparse(Float64, items[5]), 0.0)),
+            pos_convert(only(items[8]), something(tryparse(Float64, items[7]), 0.0)),
+            pos_convert(only(items[10]), something(tryparse(Float64, items[9]), 0.0)),
+            vel_convert(only(items[12]), something(tryparse(Float64, items[11]), 0.0)),
+            Char(only(items[13])),
+            valid,
+        )
+    end # constructor PTWPOS
+end # type PTWPOS
 
 
 """
-    TWHPR <: NMEAString
+    struct PTWVCT <: NMEAString
 
-A Julia struct representing the TWHPR NMEA string, which contains information about a system, heading, pitch, roll, and validity status.
+Movement Vector (PTWVCT)
+
+This NMEA data type represents movement vector information.
 
 # Fields
-- `system::String`: The system identifier.
-- `heading::Float64`: The heading value.
-- `pitch::Float64`: The pitch value.
-- `roll::Float64`: The roll value.
-- `valid::Bool`: A boolean indicating the validity of the data.
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `distance_derivative::Float64`: Distance derivative in meters.
+- `heading::Float64`: Heading in radians.
+- `distance::Float64`: Distance in meters.
+- `speed::Float64`: Speed in meters per second.
+- `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
 ```julia
-TWHPR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+PTWVCT(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
-Constructs a `TWHPR` object from an array of string items, such as those parsed from a NMEA sentence.
 
-## Parameters
-- `items::Array{D}`: An array of string items representing the parsed NMEA sentence.
-- `system::AbstractString`: (Optional) The system identifier. Defaults to "UNKNOWN".
-- `valid::Bool`: (Optional) The validity status. Defaults to `true`.
-
-## Returns
-A `TWHPR` object with fields populated based on the provided items and optional parameters.
-
-# Example
+# Examples
 ```julia
-data = ["PTWHPR", "161540.45", "12.456", "78.901", "2.34", "79.912", "0.12*2C"]
-twhpr = TWHPR(data, system="NAV", valid=true)
+data = PTWVCT(["PTWVCT", "123456", "2.0", "M", "1.5708", "R", "5.0", "M"])
 ```
+
 """
-struct TWHPR <: NMEAString
+struct PTWVCT <: NMEAString
+    # Movement Vector
+    # $PTWVCT,TIME,DISTANCE_DERIVATIVE,DD_UNIT[Meters],HEADING,H_UNIT[Radians],DISTANCE,D_UNIT[Meters],SPEED, S_UNIT[Meters Per Second]*CHECKSUM
+    system::String
+    time::Float64
+    distance_derivative::Float64
+    heading::Float64
+    distance::Float64
+    speed::Float64
+    valid::Bool
+
+    function PTWVCT(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            pos_convert(only(items[4]), something(tryparse(Float64, items[3]), 0.0)),
+            orientation_convert(
+                only(items[6]),
+                something(tryparse(Float64, items[5]), 0.0),
+            ),
+            pos_convert(only(items[8]), something(tryparse(Float64, items[7]), 0.0)),
+            vel_convert(only(items[10]), something(tryparse(Float64, items[9]), 0.0)),
+            valid,
+        )
+    end # constructor PTWVCT
+end # type PTWVCT
+
+
+"""
+    struct PTWPLS <: NMEAString
+
+Position in Pulses (PTWPLS)
+
+This NMEA data type represents position information in pulses.
+
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `x::Float64`: X position in pulses.
+- `y::Float64`: Y position in pulses.
+- `heading::Float64`: Heading in degrees.
+- `valid::Bool`: Flag indicating the validity of the data.
+
+# Constructor
+```julia
+PTWPLS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = PTWPLS(["PTWPLS", "123456", "500", "P", "750", "P", "90.0", "D"])
+```
+
+"""
+struct PTWPLS <: NMEAString
+    # Position in pulses
+    # $PTWPLS,TIME,X,X_UNIT[Pulses],Y,Y_UNIT[Pulses],HEADING,H_UNIT[Degrees]*CHECKSUM
+    system::String
+    time::Float64
+    x::Float64
+    y::Float64
+    heading::Float64
+    valid::Bool
+
+    function PTWPLS(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Float64, items[3]), 0.0),
+            something(tryparse(Float64, items[5]), 0.0),
+            orientation_convert(
+                only(items[8]),
+                something(tryparse(Float64, items[7]), 0.0),
+            ),
+            valid,
+        )
+    end # constructor PTWPLS
+end # type PTWPLS
+
+"""
+    struct PTWWHE <: NMEAString
+
+Wheels Information (PTWWHE)
+
+This NMEA data type represents wheels information.
+
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `lw_pulses::Float64`: Left wheel pulses.
+- `lw_distance::Float64`: Left wheel distance in meters.
+- `lw_direction::Char`: Left wheel direction indicator ('F' for forward, 'B' for backward).
+- `rw_pulses::Float64`: Right wheel pulses.
+- `rw_distance::Float64`: Right wheel distance in meters.
+- `rw_direction::Char`: Right wheel direction indicator ('F' for forward, 'B' for backward).
+- `heading::Float64`: Heading.
+- `valid::Bool`: Flag indicating the validity of the data.
+
+# Constructor
+```julia
+PTWWHE(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = PTWWHE(["PTWWHE", "123456", "500", "100.0", "M", "F", "750", "150.0", "M", "B", "90.0"])
+```
+
+"""
+struct PTWWHE <: NMEAString
+    # Wheels information
+    # $PTWWHE,TIME,LEFT_WHEEL_PULSES,LW_DISTANCE,LWD_UNIT[Meters],LW_DIRECTION[Forward/Backward],RIGHT_WHEEL_PULSES,RW_DISTANCE,RWD_UNIT[Meters],RW_DIRECTION[Forward/Backward],HEADING*CHECKSUM
+    system::String
+    time::Float64
+    lw_pulses::Float64
+    lw_distance::Float64
+    lw_direction::Char
+    rw_pulses::Float64
+    rw_distance::Float64
+    rw_direction::Char
+    heading::Float64
+    valid::Bool
+
+    function PTWWHE(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Float64, items[3]), 0.0),
+            pos_convert(only(items[5]), something(tryparse(Float64, items[4]), 0.0)),
+            Char(only(items[6])),
+            something(tryparse(Float64, items[7]), 0.0),
+            pos_convert(only(items[9]), something(tryparse(Float64, items[8]), 0.0)),
+            Char(only(items[10])),
+            something(tryparse(Float64, items[11]), 0.0),
+            valid,
+        )
+    end # constructor PTWWHE
+end # type PTWWHE
+
+"""
+    struct PTWHPR <: NMEAString
+
+IMU Heading Pitch Roll (PTWHPR)
+
+This NMEA data type represents inertial measurement unit (IMU) information, including heading, pitch, and roll.
+
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `heading::Float64`: Heading in degrees.
+- `pitch::Float64`: Pitch in degrees.
+- `roll::Float64`: Roll in degrees.
+- `valid::Bool`: Flag indicating the validity of the data.
+
+# Constructor
+```julia
+PTWHPR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = PTWHPR(["PTWHPR", "123456", "90.0", "30.0", "-45.0"])
+```
+
+"""
+struct PTWHPR <: NMEAString
+    # IMU heading pitch roll
+    # $PTWHPR,HEADING,PITCH,ROLL*CHECKSUM
     system::String
     time::Float64
     heading::Float64
@@ -731,13 +933,124 @@ struct TWHPR <: NMEAString
     roll::Float64
     valid::Bool
 
-    function TWHPR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
-        # $PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2C
-        new(system,
+    function PTWHPR(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
             _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]),0.0),
-            something(tryparse(Float64, items[4]),0.0),
-            something(tryparse(Float64, items[5]),0.0),
-            valid)
-    end # constructor TWHPR
-end # type TWHPR
+            something(tryparse(Float64, items[3]), 0.0),
+            something(tryparse(Float64, items[4]), 0.0),
+            something(tryparse(Float64, items[5]), 0.0),
+            valid,
+        )
+    end # constructor PTWHPR
+end # type PTWHPR
+
+
+"""
+    struct PTACC <: NMEAString
+
+IMU Accelerometer (PTACC)
+
+This NMEA data type represents inertial measurement unit (IMU) accelerometer information.
+
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `x::Float64`: Acceleration in the X-axis.
+- `y::Float64`: Acceleration in the Y-axis.
+- `z::Float64`: Acceleration in the Z-axis.
+- `valid::Bool`: Flag indicating the validity of the data.
+
+# Constructor
+```julia
+PTACC(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = PTACC(["PTACC", "123456", "0.5", "1.0", "-0.2"])
+```
+
+"""
+struct PTACC <: NMEAString
+    # IMU accelerometer
+    # $PTACC,ACC_X,ACC_Y,ACC_Z*CHECKSUM
+    system::String
+    time::Float64
+    x::Float64
+    y::Float64
+    z::Float64
+    valid::Bool
+
+    function PTACC(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Float64, items[3]), 0.0),
+            something(tryparse(Float64, items[4]), 0.0),
+            something(tryparse(Float64, items[5]), 0.0),
+            valid,
+        )
+    end # constructor PTACC
+end # type PTACC
+
+
+"""
+    struct PTGYR <: NMEAString
+
+IMU Gyroscope (PTGYR)
+
+This NMEA data type represents inertial measurement unit (IMU) gyroscope information.
+
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `x::Float64`: Angular velocity around the X-axis.
+- `y::Float64`: Angular velocity around the Y-axis.
+- `z::Float64`: Angular velocity around the Z-axis.
+- `valid::Bool`: Flag indicating the validity of the data.
+
+# Constructor
+```julia
+PTGYR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+```
+
+# Examples
+```julia
+data = PTGYR(["PTGYR", "123456", "0.1", "-0.2", "0.5"])
+```
+
+"""
+struct PTGYR <: NMEAString
+    # IMU gyroscope
+    # $PTGYR,GYR_X,GYR_Y,GYR_Z*CHECKSUM
+    system::String
+    time::Float64
+    x::Float64
+    y::Float64
+    z::Float64
+    valid::Bool
+
+    function PTGYR(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where {D<:SubString}
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Float64, items[3]), 0.0),
+            something(tryparse(Float64, items[4]), 0.0),
+            something(tryparse(Float64, items[5]), 0.0),
+            valid,
+        )
+    end # constructor PTGYR
+end # type PTGYR

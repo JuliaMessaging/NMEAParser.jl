@@ -32,7 +32,7 @@ Here’s a simple example that demonstrates how to parse an NMEA sentence:
 ```julia
 using NMEAParser
 
-example = parse(raw"$GPGGA,134740.000,5540.3248,N,01231.2992,E,1,09,0.9,20.2,M,41.5,M,,0000*61")
+example = nmea_parse(raw"$GPGGA,134740.000,5540.3248,N,01231.2992,E,1,09,0.9,20.2,M,41.5,M,,0000*61")
 println(example.latitude)
 ```
 
