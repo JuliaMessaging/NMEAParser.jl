@@ -3,7 +3,7 @@ module PrecompileExt # Should be same name as the file (just like a normal packa
 using PrecompileTools, NMEAParser
 
 @setup_workload begin
-    @info "running optional precompiler set"
+    @debug "running optional precompiler set"
     test_msgs = [
         raw"$GPGGA,134735.000,5540.3232,N,01231.2946,E,1,10,0.8,23.6,M,41.5,M,,0000*69",
         raw"$GPGSA,A,3,03,22,06,19,11,14,32,01,28,18,,,1.8,0.8,1.6*3F",
