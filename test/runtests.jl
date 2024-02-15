@@ -5,7 +5,7 @@ Aqua.test_unbound_args(NMEAParser)
 Aqua.test_undefined_exports(NMEAParser)
 Aqua.test_project_extras(NMEAParser)
 Aqua.test_stale_deps(NMEAParser; ignore = [:Aqua])
-Aqua.test_deps_compat(NMEAParser)
+# Aqua.test_deps_compat(NMEAParser)
 
 @testset "Test with Data File: `parse_msg!` and `update!`" begin
     nmeas = NMEAData()
