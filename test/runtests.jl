@@ -153,9 +153,9 @@ end
 end
 
 @testset "supported nmea" begin
-line = raw"$GPGGA,134740.000,5540.3248,N,01231.2992,E,1,09,0.9,20.2,M,41.5,M,,0000*61"
-    @test !NMEAParser.is_string_proprietary(line)
-    @test !NMEAParser.is_string_supported(line)
+    line = raw"$GPGGA,134740.000,5540.3248,N,01231.2992,E,1,09,0.9,20.2,M,41.5,M,,0000*61"
+    @test NMEAParser.is_string_proprietary(line) === false
+    @test NMEAParser.is_string_supported(line)
 end
 
 @testset verbose = true "unit conversion" begin
