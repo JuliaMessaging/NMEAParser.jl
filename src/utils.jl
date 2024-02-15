@@ -37,7 +37,7 @@ macro do_parse(headers, header_str, items, system, valid)
         )
     end
     quote
-        $(code.args...)
+        $(code.args...) # COV_EXCL_LINE
     end
 end
 
