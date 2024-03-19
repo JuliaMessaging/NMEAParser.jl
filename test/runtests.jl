@@ -7,6 +7,13 @@ Aqua.test_project_extras(NMEAParser)
 Aqua.test_stale_deps(NMEAParser; ignore = [:Aqua])
 # Aqua.test_deps_compat(NMEAParser)
 
+@testset "nmea_parse NMEAParser.parse equivalency" begin
+    msg = raw"$GPGGA,181908.00,3404.7041778,N,07044.3966270,W,4,13,1.00,495.144,M,29.200,M,0.10,0000*5f"
+    nmea_parse_out = nmea_parse(msg)
+    nmeaparser_parse_out = NMEAParser.parse(msg)
+    @test nmea_parse_out === nmeaparser_parse_out 
+end
+
 @testset "Test with Data File: `parse_msg!` and `update!`" begin
     nmeas = NMEAData()
     open("testdata.txt", "r") do f
@@ -166,6 +173,19 @@ end
 end
 
 @testset verbose = true "unit conversion" begin
+    @testset "Degrees Minutes Seconds to Decimal Degrees" begin
+        @test NMEAParser._dms_to_dd("4807.038", "N") == 48.1173
+
+        @test_throws ArgumentError NMEAParser._dms_to_dd("", "N")
+        @test_throws ArgumentError NMEAParser._dms_to_dd("4807038", "N")
+    end
+
+    @testset "Hour Minutes Seconds to Seconds" begin
+        @test NMEAParser._hms_to_secs("123519") == 45319.0
+
+        @test_throws ArgumentError NMEAParser._hms_to_secs("00")
+    end
+
     @testset "Pos conversion" begin
         # Test conversion from feet to meters
         @test NMEAParser.pos_convert('F', 10.0) ≈ 3.048

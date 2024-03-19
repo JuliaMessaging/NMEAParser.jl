@@ -197,7 +197,7 @@ function is_string_proprietary(nmea_string::AbstractString)
 end
 
 """
-    _dms_to_dd(dms::SubString, hemi::SubString)
+    _dms_to_dd(dms, hemi)
 
 Converts a string representing degrees, minutes and seconds (DMS) to decimal degrees.
 
@@ -215,7 +215,7 @@ hemi = "N"
 dec_degrees = _dms_to_dd(dms, hemi)
 ```
 """
-function _dms_to_dd(dms::SubString, hemi::SubString)::Union{Float64, Nothing}
+function _dms_to_dd(dms::T, hemi::T)::Union{Float64, Nothing} where {T <: AbstractString}
     if dms == "" || hemi == ""
         throw(ArgumentError("Empty string cannot be parsed"))
     end
@@ -240,7 +240,7 @@ function _dms_to_dd(dms::SubString, hemi::SubString)::Union{Float64, Nothing}
 end # function _dms_to_dd
 
 """
-    _hms_to_secs(hms::SubString)
+    _hms_to_secs(hms)
 
 Converts a string representing hours, minutes and seconds (HMS) to seconds.
 
@@ -256,7 +256,7 @@ hms = "123519"
 seconds = _hms_to_secs(hms)
 ```
 """
-function _hms_to_secs(hms::SubString)::Float64
+function _hms_to_secs(hms::T)::Float64 where { T <: AbstractString }
     if length(hms) < 6
         throw(ArgumentError("Not enough characters to be a time value"))
     end
