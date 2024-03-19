@@ -40,7 +40,7 @@ Aqua.test_stale_deps(NMEAParser; ignore = [:Aqua])
     end
 end
 
-@testset "Test with Data File: `update` & `pop!`" begin
+@testset "Test with Data File: `update` & `NMEAParser.pop!`" begin
     nmeas = NMEAData()
     open("$(@__DIR__())/testdata.txt", "r") do f
         while !eof(f)
@@ -54,39 +54,39 @@ end
             mtype = typeof(nmea_data)
             if (mtype == GGA)
                 @test !isnothing(nmeas.last_GGA)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GGA)
             elseif (mtype == RMC)
                 @test !isnothing(nmeas.last_RMC)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_RMC)
             elseif (mtype == GSA)
                 @test !isnothing(nmeas.last_GSA)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GSA)
             elseif (mtype == GSV)
                 @test !isnothing(nmeas.last_GSV)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GSV)
             elseif (mtype == GBS)
                 @test !isnothing(nmeas.last_GBS)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GBS)
             elseif (mtype == VTG)
                 @test !isnothing(nmeas.last_VTG)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_VTG)
             elseif (mtype == GLL)
                 @test !isnothing(nmeas.last_GLL)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GLL)
             elseif (mtype == ZDA)
                 @test !isnothing(nmeas.last_ZDA)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_ZDA)
             elseif (mtype == DTM)
                 @test !isnothing(nmeas.last_DTM)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_DTM)
             else
                 continue
@@ -319,7 +319,7 @@ end
                 raw"$PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2C",
                 validate_checksum = false,
             )
-            @test example_default.system === "UNKNOWN"
+            @test example_default.system === "PROPRIETARY"
             @test example_default.valid === true
         end
         @testset "PTACC" begin
