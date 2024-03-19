@@ -30,6 +30,8 @@ end
                 @test nmeas.last_GSA.valid
             elseif (mtype == GSV)
                 @test nmeas.last_GSV.valid
+            elseif (mtype == GST)
+                @test nmeas.last_GST.valid
             elseif (mtype == GBS)
                 @test nmeas.last_GBS.valid
             elseif (mtype == VTG)
@@ -75,6 +77,10 @@ end
                 @test !isnothing(nmeas.last_GSV)
                 @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GSV)
+            elseif (mtype == GST)
+                @test !isnothing(nmeas.last_GST)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_GST)
             elseif (mtype == GBS)
                 @test !isnothing(nmeas.last_GBS)
                 @test nmea_data == NMEAParser.pop!(nmeas, mtype)
@@ -102,7 +108,7 @@ end
     end
 end
 
-@testset verbose = true "Test SPS data" begin
+@testset verbose = true "Test GNSS data" begin
     @testset "RTK GPS" begin
         nmea_data_simple =
             raw"$GPGGA,181908.00,3404.7041778,N,07044.3966270,W,4,13,1.00,495.144,M,29.200,M,0.10,0000*5f"

@@ -41,14 +41,13 @@ result = nmea_parse("\$GGA,123456,123.456,N,987.654,W,1,8,0.9,123.4,M,54.3,M,1,"
 ```
 
 """
-function nmea_parse(nmea_string::AbstractString; validate_checksum = true)
+function nmea_parse(nmea_string::T; validate_checksum = true) where { T <: AbstractString }
     isempty(nmea_string) && throw(BoundsError("Input string is empty"))
 
     message, checksum =
         contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
 
-    valid =
-        validate_checksum ? Base.parse(UInt8, "0x$checksum") === hash_msg(message) : true
+    valid = validate_checksum ? Base.parse(UInt8, "0x$checksum") === hash_msg(message) : true
 
     items = split(message, ',')
     header = items |> first

@@ -311,7 +311,7 @@ struct GST <: NMEAString
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
-    ) where {D<:SubString}
+    ) where { D <: SubString }
         new(
             system,
             _hms_to_secs(items[2]),
@@ -322,6 +322,7 @@ struct GST <: NMEAString
             something(tryparse(Float64, items[7]), 0.0),
             something(tryparse(Float64, items[8]), 0.0),
             something(tryparse(Float64, items[9]), 0.0),
+            valid
         )
     end # constructor GST
 end # type GST
