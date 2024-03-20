@@ -7,6 +7,13 @@ Aqua.test_project_extras(NMEAParser)
 Aqua.test_stale_deps(NMEAParser; ignore = [:Aqua])
 # Aqua.test_deps_compat(NMEAParser)
 
+@testset "nmea_parse NMEAParser.parse equivalency" begin
+    msg = raw"$GPGGA,181908.00,3404.7041778,N,07044.3966270,W,4,13,1.00,495.144,M,29.200,M,0.10,0000*5f"
+    nmea_parse_out = nmea_parse(msg)
+    nmeaparser_parse_out = NMEAParser.parse(msg)
+    @test nmea_parse_out === nmeaparser_parse_out 
+end
+
 @testset "Test with Data File: `parse_msg!` and `update!`" begin
     nmeas = NMEAData()
     open("testdata.txt", "r") do f
@@ -23,6 +30,8 @@ Aqua.test_stale_deps(NMEAParser; ignore = [:Aqua])
                 @test nmeas.last_GSA.valid
             elseif (mtype == GSV)
                 @test nmeas.last_GSV.valid
+            elseif (mtype == GST)
+                @test nmeas.last_GST.valid
             elseif (mtype == GBS)
                 @test nmeas.last_GBS.valid
             elseif (mtype == VTG)
@@ -40,7 +49,7 @@ Aqua.test_stale_deps(NMEAParser; ignore = [:Aqua])
     end
 end
 
-@testset "Test with Data File: `update` & `pop!`" begin
+@testset "Test with Data File: `update` & `NMEAParser.pop!`" begin
     nmeas = NMEAData()
     open("$(@__DIR__())/testdata.txt", "r") do f
         while !eof(f)
@@ -54,39 +63,43 @@ end
             mtype = typeof(nmea_data)
             if (mtype == GGA)
                 @test !isnothing(nmeas.last_GGA)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GGA)
             elseif (mtype == RMC)
                 @test !isnothing(nmeas.last_RMC)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_RMC)
             elseif (mtype == GSA)
                 @test !isnothing(nmeas.last_GSA)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GSA)
             elseif (mtype == GSV)
                 @test !isnothing(nmeas.last_GSV)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GSV)
+            elseif (mtype == GST)
+                @test !isnothing(nmeas.last_GST)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
+                @test isnothing(nmeas.last_GST)
             elseif (mtype == GBS)
                 @test !isnothing(nmeas.last_GBS)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GBS)
             elseif (mtype == VTG)
                 @test !isnothing(nmeas.last_VTG)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_VTG)
             elseif (mtype == GLL)
                 @test !isnothing(nmeas.last_GLL)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_GLL)
             elseif (mtype == ZDA)
                 @test !isnothing(nmeas.last_ZDA)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_ZDA)
             elseif (mtype == DTM)
                 @test !isnothing(nmeas.last_DTM)
-                @test nmea_data == pop!(nmeas, mtype)
+                @test nmea_data == NMEAParser.pop!(nmeas, mtype)
                 @test isnothing(nmeas.last_DTM)
             else
                 continue
@@ -95,7 +108,7 @@ end
     end
 end
 
-@testset verbose = true "Test SPS data" begin
+@testset verbose = true "Test GNSS data" begin
     @testset "RTK GPS" begin
         nmea_data_simple =
             raw"$GPGGA,181908.00,3404.7041778,N,07044.3966270,W,4,13,1.00,495.144,M,29.200,M,0.10,0000*5f"
@@ -166,6 +179,19 @@ end
 end
 
 @testset verbose = true "unit conversion" begin
+    @testset "Degrees Minutes Seconds to Decimal Degrees" begin
+        @test NMEAParser._dms_to_dd("4807.038", "N") == 48.1173
+
+        @test_throws ArgumentError NMEAParser._dms_to_dd("", "N")
+        @test_throws ArgumentError NMEAParser._dms_to_dd("4807038", "N")
+    end
+
+    @testset "Hour Minutes Seconds to Seconds" begin
+        @test NMEAParser._hms_to_secs("123519") == 45319.0
+
+        @test_throws ArgumentError NMEAParser._hms_to_secs("00")
+    end
+
     @testset "Pos conversion" begin
         # Test conversion from feet to meters
         @test NMEAParser.pos_convert('F', 10.0) ≈ 3.048
@@ -319,7 +345,7 @@ end
                 raw"$PTWHPR,161540.45,12.456,78.901,2.34,79.912,0.12*2C",
                 validate_checksum = false,
             )
-            @test example_default.system === "UNKNOWN"
+            @test example_default.system === "PROPRIETARY"
             @test example_default.valid === true
         end
         @testset "PTACC" begin

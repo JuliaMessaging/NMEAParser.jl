@@ -99,23 +99,27 @@ function get_system(mtype::SubString)
     if (occursin(r"^\$GP", mtype))
         system = "GPS"
 
-        # GLONASS
+    # GLONASS
     elseif (occursin(r"^\$GL", mtype))
         system = "GLONASS"
 
-        # GALILEO
+    # GALILEO
     elseif (occursin(r"^\$GA", mtype))
         system = "GALILEO"
 
-        # BeiDou
+    # BeiDou
     elseif (occursin(r"^\$GB", mtype) || occursin(r"^\$BD", mtype))
         system = "BEIDOU"
 
-        # Combined
+    # Combined
     elseif (occursin(r"^\$GN", mtype))
         system = "COMBINED"
 
-        # Proprietary (non-NMEA standard) message
+    # Proprietary (non-NMEA standard) message
+    elseif (occursin(r"^\$P[A,T]", mtype))
+        system = "PROPRIETARY"
+
+    # TODO: support more system types message
     else
         system = "UNKNOWN"
     end
@@ -151,16 +155,19 @@ function is_string_supported(nmea_string::AbstractString)
         occursin(r"GGA$", header) ||
         occursin(r"GLL$", header) ||
         occursin(r"GSA$", header) ||
+        occursin(r"GST$", header) ||
         occursin(r"GSV$", header) ||
         occursin(r"RMC$", header) ||
         occursin(r"VTG$", header) ||
         occursin(r"ZDA$", header) ||
         occursin(r"PASHR$", header) ||
-        occursin(r"TWVCT$", header) ||
-        occursin(r"TWPOS$", header) ||
-        occursin(r"TWPLS$", header) ||
-        occursin(r"TWWHE$", header) ||
-        occursin(r"TWHPR$", header)
+        occursin(r"WPOS$", header) ||
+        occursin(r"WVCT$", header) ||
+        occursin(r"WPLS$", header) ||
+        occursin(r"WWHE$", header) ||
+        occursin(r"WHPR$", header) ||
+        occursin(r"ACC$", header) ||
+        occursin(r"GYR$", header)
     )
         return true
     else
@@ -175,13 +182,13 @@ function is_string_proprietary(nmea_string::AbstractString)
 
     if (
         occursin(r"PASHR$", header) ||
-        occursin(r"PTWPOS$", header) ||
-        occursin(r"PTWVCT$", header) ||
-        occursin(r"PTWPLS$", header) ||
-        occursin(r"PTWWHE$", header) ||
-        occursin(r"PTWHPR$", header) ||
-        occursin(r"PTACC$", header) ||
-        occursin(r"PTGYR$", header)
+        occursin(r"WPOS$", header) ||
+        occursin(r"WVCT$", header) ||
+        occursin(r"WPLS$", header) ||
+        occursin(r"WWHE$", header) ||
+        occursin(r"WHPR$", header) ||
+        occursin(r"ACC$", header) ||
+        occursin(r"GYR$", header)
     )
         return true
     else
@@ -190,7 +197,7 @@ function is_string_proprietary(nmea_string::AbstractString)
 end
 
 """
-    _dms_to_dd(dms::SubString, hemi::SubString)
+    _dms_to_dd(dms, hemi)
 
 Converts a string representing degrees, minutes and seconds (DMS) to decimal degrees.
 
@@ -208,12 +215,19 @@ hemi = "N"
 dec_degrees = _dms_to_dd(dms, hemi)
 ```
 """
-function _dms_to_dd(dms::SubString, hemi::SubString)::Float64
+function _dms_to_dd(dms::T, hemi::T)::Union{Float64, Nothing} where {T <: AbstractString}
+    if dms == "" || hemi == ""
+        throw(ArgumentError("Empty string cannot be parsed"))
+    end
+
     if (dms[1:1] == "0")
         dms = dms[2:end]
     end
 
     decimalindex = findfirst('.', dms)
+    if isnothing(decimalindex)
+        throw(ArgumentError("Missing decimal index"))
+    end
     degrees = Base.parse(Float64, dms[1:decimalindex-3])
     minutes = Base.parse(Float64, dms[decimalindex-2:end])
     dec_degrees = degrees + (minutes / 60)
@@ -226,7 +240,7 @@ function _dms_to_dd(dms::SubString, hemi::SubString)::Float64
 end # function _dms_to_dd
 
 """
-    _hms_to_secs(hms::SubString)
+    _hms_to_secs(hms)
 
 Converts a string representing hours, minutes and seconds (HMS) to seconds.
 
@@ -242,7 +256,10 @@ hms = "123519"
 seconds = _hms_to_secs(hms)
 ```
 """
-function _hms_to_secs(hms::SubString)::Float64
+function _hms_to_secs(hms::T)::Float64 where { T <: AbstractString }
+    if length(hms) < 6
+        throw(ArgumentError("Not enough characters to be a time value"))
+    end
     hours = Base.parse(Float64, hms[1:2])
     minutes = Base.parse(Float64, hms[3:4])
     seconds = Base.parse(Float64, hms[5:end])

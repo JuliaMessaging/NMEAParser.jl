@@ -5,17 +5,18 @@ const NMEA_TYPES = [
     (r"GBS$", GBS),
     (r"GLL$", GLL),
     (r"GSV$", GSV),
+    (r"GST$", GST),
     (r"RMC$", RMC),
     (r"VTG$", VTG),
     (r"ZDA$", ZDA),
     (r"PASHR$", PASHR),
-    (r"PTWPOS$", PTWPOS),
-    (r"PTWVCT$", PTWVCT),
-    (r"PTWPLS$", PTWPLS),
-    (r"PTWWHE$", PTWWHE),
-    (r"PTWHPR$", PTWHPR),
-    (r"PTACC$", PTACC),
-    (r"PTGYR$", PTGYR),
+    (r"WPOS$", WPOS),
+    (r"WVCT$", WVCT),
+    (r"WPLS$", WPLS),
+    (r"WWHE$", WWHE),
+    (r"HPR$", WHPR),
+    (r"ACC$", ACC),
+    (r"GYR$", GYR),
 ]
 
 
@@ -40,14 +41,13 @@ result = nmea_parse("\$GGA,123456,123.456,N,987.654,W,1,8,0.9,123.4,M,54.3,M,1,"
 ```
 
 """
-function nmea_parse(nmea_string::AbstractString; validate_checksum = true)
+function nmea_parse(nmea_string::T; validate_checksum = true) where { T <: AbstractString }
     isempty(nmea_string) && throw(BoundsError("Input string is empty"))
 
     message, checksum =
         contains(nmea_string, "*") ? split(nmea_string, '*') : (nmea_string, 00)
 
-    valid =
-        validate_checksum ? Base.parse(UInt8, "0x$checksum") === hash_msg(message) : true
+    valid = validate_checksum ? Base.parse(UInt8, "0x$checksum") === hash_msg(message) : true
 
     items = split(message, ',')
     header = items |> first
@@ -58,6 +58,7 @@ function nmea_parse(nmea_string::AbstractString; validate_checksum = true)
     throw(ArgumentError("NMEA string ($header) not supported"))
 end
 
+parse(nmea_string::AbstractString; validate_checksum = true) = nmea_parse(nmea_string, validate_checksum=validate_checksum)
 
 """
 	NMEAData()
@@ -69,6 +70,7 @@ A mutable struct that stores the last parsed NMEA messages of different types.
 - `last_RMC::Union{Nothing, RMC}`: the last RMC message parsed, or nothing if none
 - `last_GSA::Union{Nothing, GSA}`: the last GSA message parsed, or nothing if none
 - `last_GSV::Union{Nothing, GSV}`: the last GSV message parsed, or nothing if none
+- `last_GST::Union{Nothing, GST}`: the last GST message parsed, or nothing if none
 - `last_GBS::Union{Nothing, GBS}`: the last GBS message parsed, or nothing if none
 - `last_VTG::Union{Nothing, VTG}`: the last VTG message parsed, or nothing if none
 - `last_GLL::Union{Nothing, GLL}`: the last GLL message parsed, or nothing if none
@@ -80,6 +82,7 @@ mutable struct NMEAData
     last_RMC::Union{Nothing,RMC}
     last_GSA::Union{Nothing,GSA}
     last_GSV::Union{Nothing,GSV}
+    last_GST::Union{Nothing,GST}
     last_GBS::Union{Nothing,GBS}
     last_VTG::Union{Nothing,VTG}
     last_GLL::Union{Nothing,GLL}
@@ -105,6 +108,7 @@ update!(s::NMEAData, msg::GGA) = s.last_GGA = msg
 update!(s::NMEAData, msg::RMC) = s.last_RMC = msg
 update!(s::NMEAData, msg::GSA) = s.last_GSA = msg
 update!(s::NMEAData, msg::GSV) = s.last_GSV = msg
+update!(s::NMEAData, msg::GST) = s.last_GST = msg
 update!(s::NMEAData, msg::GBS) = s.last_GBS = msg
 update!(s::NMEAData, msg::VTG) = s.last_VTG = msg
 update!(s::NMEAData, msg::GLL) = s.last_GLL = msg
@@ -121,6 +125,7 @@ update(msg::GGA, s::NMEAData) = (s.last_GGA = msg; s)
 update(msg::RMC, s::NMEAData) = (s.last_RMC = msg; s)
 update(msg::GSA, s::NMEAData) = (s.last_GSA = msg; s)
 update(msg::GSV, s::NMEAData) = (s.last_GSV = msg; s)
+update(msg::GST, s::NMEAData) = (s.last_GST = msg; s)
 update(msg::GBS, s::NMEAData) = (s.last_GBS = msg; s)
 update(msg::VTG, s::NMEAData) = (s.last_VTG = msg; s)
 update(msg::GLL, s::NMEAData) = (s.last_GLL = msg; s)
@@ -160,6 +165,13 @@ function pop!(nmea_data::NMEAData, ::Type{GSV})
         isnothing(nmea_data.last_GSV) ? throw(UndefVarError("last_GSV not defined")) :
         nmea_data.last_GSV
     nmea_data.last_GSV = nothing
+    return last
+end
+function pop!(nmea_data::NMEAData, ::Type{GST})
+    last =
+        isnothing(nmea_data.last_GST) ? throw(UndefVarError("last_GST not defined")) :
+        nmea_data.last_GST
+    nmea_data.last_GST = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GBS})

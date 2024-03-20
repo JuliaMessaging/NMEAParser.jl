@@ -277,6 +277,57 @@ struct GBS <: NMEAString
 end # type GBS
 
 """
+    struct GST <: NMEAString
+
+Position error statistics.
+
+# Fields
+- `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
+- `time::Float64`: Time in seconds.
+- `rms::Float64`: RMS value of the pseudorange residuals; includes carrier phase residuals during periods of RTK (float) and RTK (fixed) processing
+- `semi_major_error::Float64`: Error ellipse semi-major axis 1-sigma error, in meters
+- `semi_minor_error::Float64`: Error ellipse semi-minor axis 1-sigma error, in meters
+- `orientation_error::Float64`: Error ellipse orientation, degrees from true north
+- `latitude_error::Float64`: Latitude 1-sigma error, in meters
+- `longitude_error::Float64`: Longitude 1-sigma error, in meters
+- `height_error::Float64`: Height 1-sigma error, in meters
+- `valid::Bool`: Flag indicating the validity of the data.
+
+Example String: \$GPGST,172814.0,0.006,0.023,0.020,273.6,0.023,0.020,0.031*6A
+"""
+struct GST <: NMEAString
+    system::String
+    time::Float64
+    rms::Float64
+    semi_major_error::Float64
+    semi_minor_error::Float64
+    orientation_error::Float64
+    latitude_error::Float64
+    longitude_error::Float64
+    height_error::Float64
+    valid::Bool
+
+    function GST(
+        items::Array{D};
+        system::AbstractString = "UNKNOWN",
+        valid = true,
+    ) where { D <: SubString }
+        new(
+            system,
+            _hms_to_secs(items[2]),
+            something(tryparse(Float64, items[3]), 0.0),
+            something(tryparse(Float64, items[4]), 0.0),
+            something(tryparse(Float64, items[5]), 0.0),
+            something(tryparse(Float64, items[6]), 0.0),
+            something(tryparse(Float64, items[7]), 0.0),
+            something(tryparse(Float64, items[8]), 0.0),
+            something(tryparse(Float64, items[9]), 0.0),
+            valid
+        )
+    end # constructor GST
+end # type GST
+
+"""
     struct GLL <: NMEAString
 
 Geographic Latitude and Longitude (GLL)
@@ -658,9 +709,9 @@ struct PASHR <: NMEAString
 end # type PASHR
 
 """
-    struct PTWPOS <: NMEAString
+    struct WPOS <: NMEAString
 
-Position (PTWPOS)
+Position (WPOS)
 
 This NMEA data type represents position information.
 
@@ -677,18 +728,18 @@ This NMEA data type represents position information.
 
 # Constructor
 ```julia
-PTWPOS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+WPOS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
 
 # Examples
 ```julia
-data = PTWPOS(["PTWPOS", "123456", "45.678", "M", "123.456", "M", "789.012", "M", "456.789", "M", "5.0", "K", "F"])
+data = WPOS(["WPOS", "123456", "45.678", "M", "123.456", "M", "789.012", "M", "456.789", "M", "5.0", "K", "F"])
 ```
 
 """
-struct PTWPOS <: NMEAString
+struct WPOS <: NMEAString
     # Position
-    # $PTWPOS,TIME,X,X_UNIT[Meters],Y,Y_UNIT[Meters],Z,Z_UNIT[Meters],DISTANCE,D_UNIT[Meters],SPEED,S_UNIT[Kilometers per hour],DIRECTION[Forward/Backward]*CHECKSUM
+    # $WPOS,TIME,X,X_UNIT[Meters],Y,Y_UNIT[Meters],Z,Z_UNIT[Meters],DISTANCE,D_UNIT[Meters],SPEED,S_UNIT[Kilometers per hour],DIRECTION[Forward/Backward]*CHECKSUM
     system::String
     time::Float64
     xpose::Float64
@@ -699,7 +750,7 @@ struct PTWPOS <: NMEAString
     direction::Char
     valid::Bool
 
-    function PTWPOS(
+    function WPOS(
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
@@ -715,14 +766,14 @@ struct PTWPOS <: NMEAString
             Char(only(items[13])),
             valid,
         )
-    end # constructor PTWPOS
-end # type PTWPOS
+    end # constructor WPOS
+end # type WPOS
 
 
 """
-    struct PTWVCT <: NMEAString
+    struct WVCT <: NMEAString
 
-Movement Vector (PTWVCT)
+Movement Vector (WVCT)
 
 This NMEA data type represents movement vector information.
 
@@ -737,18 +788,18 @@ This NMEA data type represents movement vector information.
 
 # Constructor
 ```julia
-PTWVCT(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+WVCT(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
 
 # Examples
 ```julia
-data = PTWVCT(["PTWVCT", "123456", "2.0", "M", "1.5708", "R", "5.0", "M"])
+data = WVCT(["WVCT", "123456", "2.0", "M", "1.5708", "R", "5.0", "M"])
 ```
 
 """
-struct PTWVCT <: NMEAString
+struct WVCT <: NMEAString
     # Movement Vector
-    # $PTWVCT,TIME,DISTANCE_DERIVATIVE,DD_UNIT[Meters],HEADING,H_UNIT[Radians],DISTANCE,D_UNIT[Meters],SPEED, S_UNIT[Meters Per Second]*CHECKSUM
+    # $WVCT,TIME,DISTANCE_DERIVATIVE,DD_UNIT[Meters],HEADING,H_UNIT[Radians],DISTANCE,D_UNIT[Meters],SPEED, S_UNIT[Meters Per Second]*CHECKSUM
     system::String
     time::Float64
     distance_derivative::Float64
@@ -757,7 +808,7 @@ struct PTWVCT <: NMEAString
     speed::Float64
     valid::Bool
 
-    function PTWVCT(
+    function WVCT(
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
@@ -774,14 +825,14 @@ struct PTWVCT <: NMEAString
             vel_convert(only(items[10]), something(tryparse(Float64, items[9]), 0.0)),
             valid,
         )
-    end # constructor PTWVCT
-end # type PTWVCT
+    end # constructor WVCT
+end # type WVCT
 
 
 """
-    struct PTWPLS <: NMEAString
+    struct WPLS <: NMEAString
 
-Position in Pulses (PTWPLS)
+Position in Pulses (WPLS)
 
 This NMEA data type represents position information in pulses.
 
@@ -795,18 +846,18 @@ This NMEA data type represents position information in pulses.
 
 # Constructor
 ```julia
-PTWPLS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+WPLS(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
 
 # Examples
 ```julia
-data = PTWPLS(["PTWPLS", "123456", "500", "P", "750", "P", "90.0", "D"])
+data = WPLS(["WPLS", "123456", "500", "P", "750", "P", "90.0", "D"])
 ```
 
 """
-struct PTWPLS <: NMEAString
+struct WPLS <: NMEAString
     # Position in pulses
-    # $PTWPLS,TIME,X,X_UNIT[Pulses],Y,Y_UNIT[Pulses],HEADING,H_UNIT[Degrees]*CHECKSUM
+    # $WPLS,TIME,X,X_UNIT[Pulses],Y,Y_UNIT[Pulses],HEADING,H_UNIT[Degrees]*CHECKSUM
     system::String
     time::Float64
     x::Float64
@@ -814,7 +865,7 @@ struct PTWPLS <: NMEAString
     heading::Float64
     valid::Bool
 
-    function PTWPLS(
+    function WPLS(
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
@@ -830,13 +881,13 @@ struct PTWPLS <: NMEAString
             ),
             valid,
         )
-    end # constructor PTWPLS
-end # type PTWPLS
+    end # constructor WPLS
+end # type WPLS
 
 """
-    struct PTWWHE <: NMEAString
+    struct WWHE <: NMEAString
 
-Wheels Information (PTWWHE)
+Wheels Information (WWHE)
 
 This NMEA data type represents wheels information.
 
@@ -854,18 +905,18 @@ This NMEA data type represents wheels information.
 
 # Constructor
 ```julia
-PTWWHE(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+WWHE(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
 
 # Examples
 ```julia
-data = PTWWHE(["PTWWHE", "123456", "500", "100.0", "M", "F", "750", "150.0", "M", "B", "90.0"])
+data = WWHE(["WWHE", "123456", "500", "100.0", "M", "F", "750", "150.0", "M", "B", "90.0"])
 ```
 
 """
-struct PTWWHE <: NMEAString
+struct WWHE <: NMEAString
     # Wheels information
-    # $PTWWHE,TIME,LEFT_WHEEL_PULSES,LW_DISTANCE,LWD_UNIT[Meters],LW_DIRECTION[Forward/Backward],RIGHT_WHEEL_PULSES,RW_DISTANCE,RWD_UNIT[Meters],RW_DIRECTION[Forward/Backward],HEADING*CHECKSUM
+    # $WWHE,TIME,LEFT_WHEEL_PULSES,LW_DISTANCE,LWD_UNIT[Meters],LW_DIRECTION[Forward/Backward],RIGHT_WHEEL_PULSES,RW_DISTANCE,RWD_UNIT[Meters],RW_DIRECTION[Forward/Backward],HEADING*CHECKSUM
     system::String
     time::Float64
     lw_pulses::Float64
@@ -877,7 +928,7 @@ struct PTWWHE <: NMEAString
     heading::Float64
     valid::Bool
 
-    function PTWWHE(
+    function WWHE(
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
@@ -894,13 +945,13 @@ struct PTWWHE <: NMEAString
             something(tryparse(Float64, items[11]), 0.0),
             valid,
         )
-    end # constructor PTWWHE
-end # type PTWWHE
+    end # constructor WWHE
+end # type WWHE
 
 """
-    struct PTWHPR <: NMEAString
+    struct WHPR <: NMEAString
 
-IMU Heading Pitch Roll (PTWHPR)
+IMU Heading Pitch Roll (WHPR)
 
 This NMEA data type represents inertial measurement unit (IMU) information, including heading, pitch, and roll.
 
@@ -914,18 +965,18 @@ This NMEA data type represents inertial measurement unit (IMU) information, incl
 
 # Constructor
 ```julia
-PTWHPR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+WHPR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
 
 # Examples
 ```julia
-data = PTWHPR(["PTWHPR", "123456", "90.0", "30.0", "-45.0"])
+data = WHPR(["WHPR", "123456", "90.0", "30.0", "-45.0"])
 ```
 
 """
-struct PTWHPR <: NMEAString
+struct WHPR <: NMEAString
     # IMU heading pitch roll
-    # $PTWHPR,HEADING,PITCH,ROLL*CHECKSUM
+    # $WHPR,HEADING,PITCH,ROLL*CHECKSUM
     system::String
     time::Float64
     heading::Float64
@@ -933,7 +984,7 @@ struct PTWHPR <: NMEAString
     roll::Float64
     valid::Bool
 
-    function PTWHPR(
+    function WHPR(
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
@@ -946,14 +997,14 @@ struct PTWHPR <: NMEAString
             something(tryparse(Float64, items[5]), 0.0),
             valid,
         )
-    end # constructor PTWHPR
-end # type PTWHPR
+    end # constructor WHPR
+end # type WHPR
 
 
 """
-    struct PTACC <: NMEAString
+    struct ACC <: NMEAString
 
-IMU Accelerometer (PTACC)
+IMU Accelerometer (ACC)
 
 This NMEA data type represents inertial measurement unit (IMU) accelerometer information.
 
@@ -967,18 +1018,18 @@ This NMEA data type represents inertial measurement unit (IMU) accelerometer inf
 
 # Constructor
 ```julia
-PTACC(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+ACC(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
 
 # Examples
 ```julia
-data = PTACC(["PTACC", "123456", "0.5", "1.0", "-0.2"])
+data = ACC(["ACC", "123456", "0.5", "1.0", "-0.2"])
 ```
 
 """
-struct PTACC <: NMEAString
+struct ACC <: NMEAString
     # IMU accelerometer
-    # $PTACC,ACC_X,ACC_Y,ACC_Z*CHECKSUM
+    # $ACC,ACC_X,ACC_Y,ACC_Z*CHECKSUM
     system::String
     time::Float64
     x::Float64
@@ -986,7 +1037,7 @@ struct PTACC <: NMEAString
     z::Float64
     valid::Bool
 
-    function PTACC(
+    function ACC(
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
@@ -999,14 +1050,14 @@ struct PTACC <: NMEAString
             something(tryparse(Float64, items[5]), 0.0),
             valid,
         )
-    end # constructor PTACC
-end # type PTACC
+    end # constructor ACC
+end # type ACC
 
 
 """
-    struct PTGYR <: NMEAString
+    struct GYR <: NMEAString
 
-IMU Gyroscope (PTGYR)
+IMU Gyroscope (GYR)
 
 This NMEA data type represents inertial measurement unit (IMU) gyroscope information.
 
@@ -1020,18 +1071,18 @@ This NMEA data type represents inertial measurement unit (IMU) gyroscope informa
 
 # Constructor
 ```julia
-PTGYR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
+GYR(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <: SubString
 ```
 
 # Examples
 ```julia
-data = PTGYR(["PTGYR", "123456", "0.1", "-0.2", "0.5"])
+data = GYR(["GYR", "123456", "0.1", "-0.2", "0.5"])
 ```
 
 """
-struct PTGYR <: NMEAString
+struct GYR <: NMEAString
     # IMU gyroscope
-    # $PTGYR,GYR_X,GYR_Y,GYR_Z*CHECKSUM
+    # $GYR,GYR_X,GYR_Y,GYR_Z*CHECKSUM
     system::String
     time::Float64
     x::Float64
@@ -1039,7 +1090,7 @@ struct PTGYR <: NMEAString
     z::Float64
     valid::Bool
 
-    function PTGYR(
+    function GYR(
         items::Array{D};
         system::AbstractString = "UNKNOWN",
         valid = true,
@@ -1052,5 +1103,5 @@ struct PTGYR <: NMEAString
             something(tryparse(Float64, items[5]), 0.0),
             valid,
         )
-    end # constructor PTGYR
-end # type PTGYR
+    end # constructor GYR
+end # type GYR
