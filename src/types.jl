@@ -75,16 +75,16 @@ struct GGA <: NMEAString
         end
         new(
             system,
-            _hms_to_secs(items[2]),
+            _hms_to_secs(items, 2),
             _dms_to_dd(items[3], items[4]),
             _dms_to_dd(items[5], items[6]),
             fix_quality,
-            something(tryparse(Int, items[8]), 0),
-            something(tryparse(Float64, items[9]), 0.0),
-            something(tryparse(Float64, items[10]), 0.0),
-            something(tryparse(Float64, items[12]), 0.0),
-            something(tryparse(Float64, items[14]), 0.0),
-            something(tryparse(Int, items[15]), 0),
+            _to_int(items, 8),
+            _to_float(items, 9),
+            _to_float(items, 10),
+            _to_float(items, 12),
+            _to_float(items, 14),
+            _to_int(items, 15),
             valid,
         )
     end # constructor GGA
@@ -136,21 +136,14 @@ struct GSA <: NMEAString
         system::AbstractString = "UNKNOWN",
         valid = true,
     ) where {D<:SubString}
-        sat_ids = Vector{Int}()
-        for i = 4:length(items)-3
-            if (items[i] |> strip |> isempty)
-                break
-            end
-            push!(sat_ids, tryparse(Int, items[i]))
-        end
         new(
             system,
             Char(items[2][1]),
-            something(tryparse(Int, items[3]), 0),
-            sat_ids,
-            something(tryparse(Float64, items[end-2]), 0.0),
-            something(tryparse(Float64, items[end-1]), 0.0),
-            something(tryparse(Float64, items[end]), 0.0),
+            _to_int(items, 3),
+            map(_to_int, items[4:end-3]),
+            _to_float(items[end-2]),
+            _to_float(items[end-1]),
+            _to_float(items[end]),
             valid,
         )
     end # constructor GSA
@@ -201,12 +194,12 @@ struct ZDA <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Int, items[3]), 0),
-            something(tryparse(Int, items[4]), 0),
-            something(tryparse(Int, items[5]), 0),
-            something(tryparse(Int, items[6]), 0),
-            something(tryparse(Int, items[7]), 0),
+            _hms_to_secs(items, 2),
+            _to_int(items, 3),
+            _to_int(items, 4),
+            _to_int(items, 5),
+            _to_int(items, 6),
+            _to_int(items, 7),
             valid,
         )
     end # constructor ZDA
@@ -263,14 +256,14 @@ struct GBS <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
-            something(tryparse(Float64, items[4]), 0.0),
-            something(tryparse(Float64, items[5]), 0.0),
-            something(tryparse(Int, items[6]), 0),
-            something(tryparse(Float64, items[7]), 0.0),
-            something(tryparse(Float64, items[8]), 0.0),
-            something(tryparse(Float64, items[9]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
+            _to_float(items, 4),
+            _to_float(items, 5),
+            _to_int(items, 6),
+            _to_float(items, 7),
+            _to_float(items, 8),
+            _to_float(items, 9),
             valid,
         )
     end # constructor GBS
@@ -314,14 +307,14 @@ struct GST <: NMEAString
     ) where { D <: SubString }
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
-            something(tryparse(Float64, items[4]), 0.0),
-            something(tryparse(Float64, items[5]), 0.0),
-            something(tryparse(Float64, items[6]), 0.0),
-            something(tryparse(Float64, items[7]), 0.0),
-            something(tryparse(Float64, items[8]), 0.0),
-            something(tryparse(Float64, items[9]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
+            _to_float(items, 4),
+            _to_float(items, 5),
+            _to_float(items, 6),
+            _to_float(items, 7),
+            _to_float(items, 8),
+            _to_float(items, 9),
             valid
         )
     end # constructor GST
@@ -427,15 +420,15 @@ struct GSV <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            something(tryparse(Int, items[2]), 0),
-            something(tryparse(Int, items[3]), 0),
-            something(tryparse(Int, items[4]), 0),
+            _to_int(items, 2),
+            _to_int(items, 3),
+            _to_int(items, 4),
             [
                 SVData(
-                    something(tryparse(Int, items[i]), 0),
-                    something(tryparse(Int, items[i+1]), 0),
-                    something(tryparse(Int, items[i+2]), 0),
-                    something(tryparse(Int, items[i+3]), 0),
+                    _to_int(items, i),
+                    _to_int(items, i+1),
+                    _to_int(items, i+2),
+                    _to_int(items, i+3),
                 ) for i = 5:4:length(items)-4
             ],
             valid,
@@ -452,17 +445,18 @@ This NMEA data type represents recommended minimum navigation information.
 
 # Fields
 - `system::String`: GNSS system identifier (e.g., GPS, GLONASS, GALILEO, Combined).
-- `time::Float64`: Time in seconds.
-- `status::Bool`: Status indicator (true if valid fix, false otherwise).
+- `time::Float64`: Time in seconds of position fix.
+- `status::Bool`: Status indicator (true if active, false otherwise/void).
 - `latitude::Float64`: Latitude in decimal degrees.
 - `longitude::Float64`: Longitude in decimal degrees.
 - `sog::Float64`: Speed over ground in knots.
-- `cog::Float64`: Course over ground in degrees.
-- `day::String`: Day of the month.
+- `cog::Float64`: track angle over ground in degrees.
+- `date::Date`: Day of the month.
 - `month::String`: Month of the year.
 - `year::String`: Year.
 - `magvar::Float64`: Magnetic variation.
-- `mode::Char`: Mode indicator ('A' for autonomous mode).
+- `mode::Char`: Position system mode indicator (D=differential,A=autonomous,N=not valid,E=estimated/dead reckoning, M=manual input).
+- `navstatus::Char`: Navigational status. (S = Safe, C = Caution, U = Unsafe, V = Navigational status not valid).
 - `valid::Bool`: Flag indicating the validity of the data.
 
 # Constructor
@@ -472,7 +466,10 @@ RMC(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D <
 
 # Examples
 ```julia
-data = RMC(["RMC", "123456", "A", "12.3456", "N", "98.7654", "W", "5.0", "90.0", "150225", "5.0", "W", "A"])
+nmeastr = "\$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A"
+data = RMC(["RMC", "123519", "A", "4807.038", "N", "01131.000", "E", "022.4", "084.4", "230394", "003.1", "W"], "GPS", true)
+
+altstr = "\$GNRMC,060512.00,A,3150.788156,N,11711.922383,E,0.0,,311019,,,A,V*1B"
 ```
 
 """
@@ -489,6 +486,7 @@ struct RMC <: NMEAString
     year::String
     magvar::Float64
     mode::Char
+    navstatus::Char
     valid::Bool
 
     function RMC(
@@ -498,21 +496,18 @@ struct RMC <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            items[3] == "A",
-            _dms_to_dd(items[4], items[5]),
-            _dms_to_dd(items[6], items[7]),
-            something(tryparse(Float64, items[8]), 0.0),
-            something(tryparse(Float64, items[9]), 0.0),
+            _hms_to_secs(items, 2),
+            get(items, 3, "V") == "A",
+            _dms_to_dd(items, 4),
+            _dms_to_dd(items, 6),
+            _to_float(items, 8),
+            _to_float(items, 9),
             String(items[10][1:2]),
             String(items[10][3:4]),
             String(items[10][5:6]),
-            something(
-                (items[12] == "W" || items[12] == "S") ?
-                (tryparse(Float64, items[11]) * -1) : (tryparse(Float64, items[11])),
-                0.0,
-            ),
-            Char(items[3][1]),
+            (_to_float(items, 11) * (in(get(items, 12, ""),("W","S")) ? -1.0 : 1.0)),
+            only(get(items, 13, "N")),
+            only(get(items, 14, "V")),
             valid,
         )
     end # constructor RMC
@@ -561,10 +556,10 @@ struct VTG <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            something(tryparse(Float64, items[2]), 0.0),
-            something(tryparse(Float64, items[4]), 0.0),
-            something(tryparse(Float64, items[6]), 0.0),
-            something(tryparse(Float64, items[8]), 0.0),
+            _to_float(items, 2),
+            _to_float(items, 4),
+            _to_float(items, 6),
+            _to_float(items, 8),
             Char(items[10][1]),
             valid,
         )
@@ -619,11 +614,9 @@ struct DTM <: NMEAString
             system,
             String(items[2]),
             String(items[3]),
-            items[5] == "S" ? something(tryparse(Float64, items[4]), 0.0) * -1 :
-            something(tryparse(Float64, items[4]), 0.0),
-            items[7] == "W" ? something(tryparse(Float64, items[6]), 0.0) * -1 :
-            something(tryparse(Float64, items[6]), 0.0),
-            something(tryparse(Float64, items[8]), 0.0),
+            items[5] == "S" ? _to_float(items, 4) * -1 : _to_float(items, 4),
+            items[7] == "W" ? _to_float(items, 6) * -1 : _to_float(items, 6),
+            _to_float(items, 8),
             String(items[9]),
             valid,
         )
@@ -691,17 +684,17 @@ struct PASHR <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
             items[4] == "T" ? true : false,
-            something(tryparse(Float64, items[5]), 0.0),
-            something(tryparse(Float64, items[6]), 0.0),
-            something(tryparse(Float64, items[7]), 0.0),
-            something(tryparse(Float64, items[8]), 0.0),
-            something(tryparse(Float64, items[9]), 0.0),
-            something(tryparse(Float64, items[10]), 0.0),
-            something(tryparse(Int, items[11]), 0),
-            length(items) > 11 ? something(tryparse(Int, items[12]), 0) : 0,
+            _to_float(items, 5),
+            _to_float(items, 6),
+            _to_float(items, 7),
+            _to_float(items, 8),
+            _to_float(items, 9),
+            _to_float(items, 10),
+            _to_int(items, 11),
+            length(items) > 11 ? _to_int(items, 12) : 0,
             valid,
         )
     end
@@ -757,13 +750,13 @@ struct WPOS <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            pos_convert(only(items[4]), something(tryparse(Float64, items[3]), 0.0)),
-            pos_convert(only(items[6]), something(tryparse(Float64, items[5]), 0.0)),
-            pos_convert(only(items[8]), something(tryparse(Float64, items[7]), 0.0)),
-            pos_convert(only(items[10]), something(tryparse(Float64, items[9]), 0.0)),
-            vel_convert(only(items[12]), something(tryparse(Float64, items[11]), 0.0)),
-            Char(only(items[13])),
+            _hms_to_secs(items, 2),
+            pos_convert(only(get(items,4,"M")), _to_float(items, 3)),
+            pos_convert(only(get(items,6,"M")), _to_float(items, 5)),
+            pos_convert(only(get(items,8,"M")), _to_float(items, 7)),
+            pos_convert(only(get(items,10,"M")), _to_float(items, 9)),
+            vel_convert(only(get(items,12,"K")), _to_float(items, 11)),
+            Char(only(get(items,13,"F"))),
             valid,
         )
     end # constructor WPOS
@@ -815,14 +808,14 @@ struct WVCT <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            pos_convert(only(items[4]), something(tryparse(Float64, items[3]), 0.0)),
+            _hms_to_secs(items, 2),
+            pos_convert(only(get(items,4,"M")), _to_float(items, 3)),
             orientation_convert(
-                only(items[6]),
-                something(tryparse(Float64, items[5]), 0.0),
+                only(get(items,6,"D")),
+                _to_float(items, 5),
             ),
-            pos_convert(only(items[8]), something(tryparse(Float64, items[7]), 0.0)),
-            vel_convert(only(items[10]), something(tryparse(Float64, items[9]), 0.0)),
+            pos_convert(only(get(items,8,"M")), _to_float(items, 7)),
+            vel_convert(only(get(items,10,"K")), _to_float(items, 9)),
             valid,
         )
     end # constructor WVCT
@@ -872,12 +865,12 @@ struct WPLS <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
-            something(tryparse(Float64, items[5]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
+            _to_float(items, 5),
             orientation_convert(
-                only(items[8]),
-                something(tryparse(Float64, items[7]), 0.0),
+                only(get(items,8,"D")),
+                _to_float(items, 7),
             ),
             valid,
         )
@@ -935,14 +928,14 @@ struct WWHE <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
-            pos_convert(only(items[5]), something(tryparse(Float64, items[4]), 0.0)),
-            Char(only(items[6])),
-            something(tryparse(Float64, items[7]), 0.0),
-            pos_convert(only(items[9]), something(tryparse(Float64, items[8]), 0.0)),
-            Char(only(items[10])),
-            something(tryparse(Float64, items[11]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
+            pos_convert(only(get(items, 5, 'M')), _to_float(items, 4)),
+            Char(only(get(items,6,"F"))),
+            _to_float(items, 7),
+            pos_convert(only(get(items,9,"M")), _to_float(items, 8)),
+            Char(only(get(items,10,"F"))),
+            _to_float(items, 11),
             valid,
         )
     end # constructor WWHE
@@ -991,10 +984,10 @@ struct WHPR <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
-            something(tryparse(Float64, items[4]), 0.0),
-            something(tryparse(Float64, items[5]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
+            _to_float(items, 4),
+            _to_float(items, 5),
             valid,
         )
     end # constructor WHPR
@@ -1044,10 +1037,10 @@ struct ACC <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
-            something(tryparse(Float64, items[4]), 0.0),
-            something(tryparse(Float64, items[5]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
+            _to_float(items, 4),
+            _to_float(items, 5),
             valid,
         )
     end # constructor ACC
@@ -1097,10 +1090,10 @@ struct GYR <: NMEAString
     ) where {D<:SubString}
         new(
             system,
-            _hms_to_secs(items[2]),
-            something(tryparse(Float64, items[3]), 0.0),
-            something(tryparse(Float64, items[4]), 0.0),
-            something(tryparse(Float64, items[5]), 0.0),
+            _hms_to_secs(items, 2),
+            _to_float(items, 3),
+            _to_float(items, 4),
+            _to_float(items, 5),
             valid,
         )
     end # constructor GYR

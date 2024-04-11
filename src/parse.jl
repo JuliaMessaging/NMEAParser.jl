@@ -49,7 +49,7 @@ function nmea_parse(nmea_string::T; validate_checksum = true) where { T <: Abstr
 
     valid = validate_checksum ? Base.parse(UInt8, "0x$checksum") === hash_msg(message) : true
 
-    items = split(message, ',')
+    items = split(message, ',', keepempty=true)
     header = items |> first
     system = header |> get_system
 
@@ -136,75 +136,75 @@ update(msg::DTM, s::NMEAData) = (s.last_DTM = msg; s)
 	pop!(nmea_data::NMEAData, ::Type{T}) where T <: NMEAString
 
 Pop the last received message of type T from the NMEAData object nmea_data and return it.
-If no message of type T has been received, throw an UndefVarError.
+If no message of type T has been received, throw an MissingException.
 This function extends the Base.pop! function for NMEAData objects.
 """
-function pop!(nmea_data::NMEAData, ::Type{GGA})
+function pop!(nmea_data::NMEAData, ::Type{GGA})::GGA
     last =
-        isnothing(nmea_data.last_GGA) ? throw(UndefVarError("last_GGA not defined")) :
-        nmea_data.last_GGA
+        (isnothing(nmea_data.last_GGA) ? throw(MissingException("last_GGA not defined")) :
+        nmea_data.last_GGA)::GGA
     nmea_data.last_GGA = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{RMC})
     last =
-        isnothing(nmea_data.last_RMC) ? throw(UndefVarError("last_RMC not defined")) :
+        isnothing(nmea_data.last_RMC) ? throw(MissingException("last_RMC not defined")) :
         nmea_data.last_RMC
     nmea_data.last_RMC = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GSA})
     last =
-        isnothing(nmea_data.last_GSA) ? throw(UndefVarError("last_GSA not defined")) :
+        isnothing(nmea_data.last_GSA) ? throw(MissingException("last_GSA not defined")) :
         nmea_data.last_GSA
     nmea_data.last_GSA = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GSV})
     last =
-        isnothing(nmea_data.last_GSV) ? throw(UndefVarError("last_GSV not defined")) :
+        isnothing(nmea_data.last_GSV) ? throw(MissingException("last_GSV not defined")) :
         nmea_data.last_GSV
     nmea_data.last_GSV = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GST})
     last =
-        isnothing(nmea_data.last_GST) ? throw(UndefVarError("last_GST not defined")) :
+        isnothing(nmea_data.last_GST) ? throw(MissingException("last_GST not defined")) :
         nmea_data.last_GST
     nmea_data.last_GST = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GBS})
     last =
-        isnothing(nmea_data.last_GBS) ? throw(UndefVarError("last_GBS not defined")) :
+        isnothing(nmea_data.last_GBS) ? throw(MissingException("last_GBS not defined")) :
         nmea_data.last_GBS
     nmea_data.last_GBS = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{VTG})
     last =
-        isnothing(nmea_data.last_VTG) ? throw(UndefVarError("last_VTG not defined")) :
+        isnothing(nmea_data.last_VTG) ? throw(MissingException("last_VTG not defined")) :
         nmea_data.last_VTG
     nmea_data.last_VTG = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{GLL})
     last =
-        isnothing(nmea_data.last_GLL) ? throw(UndefVarError("last_GLL not defined")) :
+        isnothing(nmea_data.last_GLL) ? throw(MissingException("last_GLL not defined")) :
         nmea_data.last_GLL
     nmea_data.last_GLL = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{ZDA})
     last =
-        isnothing(nmea_data.last_ZDA) ? throw(UndefVarError("last_ZDA not defined")) :
+        isnothing(nmea_data.last_ZDA) ? throw(MissingException("last_ZDA not defined")) :
         nmea_data.last_ZDA
     nmea_data.last_ZDA = nothing
     return last
 end
 function pop!(nmea_data::NMEAData, ::Type{DTM})
     last =
-        isnothing(nmea_data.last_DTM) ? throw(UndefVarError("last_DTM not defined")) :
+        isnothing(nmea_data.last_DTM) ? throw(MissingException("last_DTM not defined")) :
         nmea_data.last_DTM
     nmea_data.last_DTM = nothing
     return last
