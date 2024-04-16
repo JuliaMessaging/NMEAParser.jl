@@ -160,16 +160,20 @@ end
 @testset "Bad data: parse_msg!" begin
     s = NMEAData()
     @test_throws BoundsError NMEAParser.parse_msg!(s, "")
-    @test_throws BoundsError NMEAParser.parse_msg!(
+    @test NMEAParser.parse_msg!(
         s,
-        "GPGSA,A,3,01,02,03,04,05,06,07,08,09,10,11,12,1.0,1.0,1.0*30",
-    )
+        raw"$NOTAREALHEADER,A,3,01,02,03,04,05,06,07,08,09,10,11,12,1.0,1.0,1.0*30",
+    ) === Nothing
 end
 
 @testset "hash strings" begin
     msg = raw"$GPRMC,154922.720,A,5209.731,N,00600.238,E,001.9,059.8,040123,000.0,W"
     checksum = 0x7a
     @test NMEAParser.hash_msg(msg) === checksum
+
+    @test NMEAParser._char_xor('s', '#') === NMEAParser._char_xor('#', 's')
+    @test NMEAParser._char_xor('s', 0x23) === NMEAParser._char_xor(0x23, 's')
+    @test NMEAParser._char_xor('s', '#') === NMEAParser._char_xor('s', 0x23)
 end
 
 @testset "supported nmea" begin
