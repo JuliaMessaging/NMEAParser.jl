@@ -41,9 +41,10 @@ macro do_parse(headers, header_str, items, system, valid)
     end
 end
 
-function hash_msg(message::AbstractString)
-    xor.(Vector{UInt8}(split(message, "\$")[2])...)
-end
+_char_xor(a::Char,b::Char) = xor(UInt8(a), UInt8(b))
+_char_xor(a::UInt8,b::Char) = xor(a, UInt8(b))
+_char_xor(a::Char,b::UInt8) = xor(UInt8(a), b)
+hash_msg(message::AbstractString)::UInt8 = foldl(_char_xor, chopprefix(message, "\$"))
 
 """
     get_system(mtype::SubString)
