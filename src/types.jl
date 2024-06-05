@@ -786,7 +786,7 @@ WVCT(items::Array{D}; system::AbstractString = "UNKNOWN", valid = true) where D 
 
 # Examples
 ```julia
-data = WVCT(["WVCT", "123456", "2.0", "M", "1.5708", "R", "5.0", "M"])
+data = WVCT(["WVCT", "123456", "2.0", "M", "1.5708", "R", "5.0", "MPS"])
 ```
 
 """
@@ -810,12 +810,9 @@ struct WVCT <: NMEAString
             system,
             _hms_to_secs(items, 2),
             pos_convert(only(get(items,4,"M")), _to_float(items, 3)),
-            orientation_convert(
-                only(get(items,6,"D")),
-                _to_float(items, 5),
-            ),
+            _to_float(items, 5),
             pos_convert(only(get(items,8,"M")), _to_float(items, 7)),
-            vel_convert(only(get(items,10,"K")), _to_float(items, 9)),
+            _to_float(items, 9),
             valid,
         )
     end # constructor WVCT

@@ -305,10 +305,10 @@ end
         end
         @testset "PTWVCT" begin
             @test NMEAParser.is_string_proprietary(
-                raw"$PTWVCT,154932.45,0.7,M,0.7,R,0.4,M,0.989949,M*3e",
+                raw"$PTWVCT,154932.45,0.7,M,0.7,R,0.4,M,0.989949,MPS*3d",
             )
             example = NMEAParser.nmea_parse(
-                raw"$PTWVCT,154932.45,0.7,M,0.7,R,0.4,M,0.989949,M*3e",
+                raw"$PTWVCT,154932.45,0.7,M,0.7,R,0.4,M,0.989949,MPS*3d",
             )
             @test example.valid
         end
