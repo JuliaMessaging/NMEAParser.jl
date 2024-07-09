@@ -74,11 +74,6 @@ GGA("GPS", 49660.0, 55.67208, 12.521653333333333, "GPS (SPS)", 9, 0.9, 20.2, 41.
 * `is_string_supported`: Checks if a string is a valid standard type (also `NMEAParser.is_string_proprietary` checks for valid proprietary types).
 * `update`: Update the last received message of type T in the NMEAData object s with the given message msg.
 
-## Sponsorship
-![sponsor logo](https://www.volkerwessels.com/dynamics/modules/SFIL0200/view.php?fil_Id=366300&thumb_nr=26)
-
-This package is developed and sponsored by [MapXact](https://mapxact.com/) and its development is driven by its use in production systems at MapXact. However, as an open-source project, we welcome all contributions, feedback, and feature requests.
-
 ## Contributing
 
 If you would like to contribute to the project, please submit a PR.
